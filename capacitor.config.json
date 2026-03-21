@@ -1,0 +1,12 @@
+{
+  "appId": "com.familycare.app",
+  "appName": "MoodAlbum",
+  "webDir": "dist",
+  "server": {
+    "url": "http://YOUR_SERVER_IP",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

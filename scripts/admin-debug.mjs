@@ -1,0 +1,13 @@
+﻿import { chromium, devices } from "@playwright/test";
+const browser = await chromium.launch({ channel: "msedge", headless: true });
+const context = await browser.newContext({ ...devices["iPhone 13"] });
+const page = await context.newPage();
+await page.goto("http://YOUR_SERVER_IP/admin");
+await page.getByPlaceholder("请输入口令").fill(process.env.ADMIN_PASSCODE);
+await page.getByRole("button", { name: "进入后台" }).click();
+await page.waitForLoadState("networkidle");
+console.log("url", page.url());
+console.log("hasReplyButton", await page.getByRole("button", { name: "发布回复" }).count());
+console.log("noticeTexts", await page.locator("body").innerText());
+await page.screenshot({ path: "test-artifacts/screenshots/admin-debug.png", fullPage: true });
+await browser.close();

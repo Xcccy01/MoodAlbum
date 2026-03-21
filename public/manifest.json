@@ -1,0 +1,23 @@
+{
+  "name": "MoodAlbum",
+  "short_name": "MoodAlbum",
+  "description": "记录心情、每日打卡和轻松记账的温柔相册。",
+  "theme_color": "#6BAF7B",
+  "background_color": "#F7FAF5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

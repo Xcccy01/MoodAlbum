@@ -1,0 +1,18 @@
+﻿import fs from "node:fs";
+import path from "node:path";
+import { chromium, devices } from "@playwright/test";
+const browser = await chromium.launch({ channel: "msedge", headless: true });
+const context = await browser.newContext({ ...devices["iPhone 13"] });
+const page = await context.newPage();
+const username = `shot_${Date.now().toString(36)}`;
+await page.goto("http://YOUR_SERVER_IP/");
+await page.getByRole("button", { name: "注册" }).click();
+await page.getByPlaceholder("2 到 20 位中文、字母、数字、下划线或短横线").fill(username);
+await page.getByPlaceholder("至少 6 位").fill("shot1234");
+await page.getByRole("button", { name: "创建账号并进入" }).click();
+await page.getByRole("button", { name: /养生/ }).click();
+const out = path.resolve("test-artifacts", "screenshots", "remote-nav-fix.png");
+fs.mkdirSync(path.dirname(out), { recursive: true });
+await page.screenshot({ path: out, fullPage: false });
+await browser.close();
+console.log(out);

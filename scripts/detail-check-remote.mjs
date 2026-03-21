@@ -1,0 +1,14 @@
+﻿import { request as playwrightRequest } from "@playwright/test";
+const stamp = Date.now().toString(36);
+const username = `seen_${stamp}`;
+const password = "seen1234";
+const userApi = await playwrightRequest.newContext({ baseURL: "http://YOUR_SERVER_IP" });
+await userApi.post("/api/auth/register", { data: { username, password } });
+await userApi.post("/api/moods", { data: { moodKey: "bad" } });
+const adminApi = await playwrightRequest.newContext({ baseURL: "http://YOUR_SERVER_IP" });
+await adminApi.post("/api/admin/login", { data: { passcode: process.env.ADMIN_PASSCODE } });
+const list = await (await adminApi.get("/api/admin/moods?status=pending&limit=60")).json();
+const target = list.items.find((item) => item.user?.username === username);
+await adminApi.post(`/api/admin/moods/${target.id}/replies`, { data: { content: "已读状态自动验证" } });
+const detail = await (await adminApi.get(`/api/admin/moods/${target.id}`)).json();
+console.log(JSON.stringify(detail, null, 2));

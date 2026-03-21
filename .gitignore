@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.DS_Store
+server/data/
+*.log
+.env
+
+# Build artifacts
+*.apk
+*.tar.gz
+
+# Test output
+test-artifacts/
+test-results/
+
+# Logs
+logs/
+
+# Android build cache
+android/app/build/
+
+# Misc
+Photo.jpg
