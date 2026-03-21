@@ -5,7 +5,7 @@
 <h1 align="center">MoodAlbum 🌿</h1>
 
 <p align="center">
-  <b>一个轻轻的、暖暖的情感小工具</b><br/>
+  <b>情绪链接</b><br/>
   <i>A soft, warm little app for sharing feelings across generations</i>
 </p>
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 这是什么呀？ / What is this?
+## What is this?
 
 你有没有觉得，和家里的长辈或者小朋友之间，其实不需要每天打电话、不需要事无巨细地汇报生活——但你又确实想知道他们今天过得怎么样？
 
@@ -37,27 +37,27 @@ It's simple: log your mood, do a daily check-in, track some expenses. No social 
 
 ---
 
-## 有什么好玩的？ / Features
+## Features
 
-### ☘️ 心情 · Mood
+### ❤️ · Mood
 
 记录今天的心情——开心、有点累、想休息……还可以自定义心情。家人可以通过后台悄悄回复你的心情，像收到一封温柔的小纸条。
 
 > Log your mood — happy, a bit tired, want some rest... You can create custom moods too. Family members can reply through the admin panel, like slipping a warm little note under your door.
 
-### 🌿 养生 · Wellness
+### 🌿  · Wellness
 
 每日打卡，你会慢慢养出一棵小植物：从种子 🫘 到发芽 🌱，再到开花 🌸，最后长成大树 🌳。每天还会收到一条应季的养生小贴士。
 
 > Daily check-in grows a little plant: from seed 🫘 to sprout 🌱, to bloom 🌸, all the way to a flourishing tree 🌳. You'll also get seasonal wellness tips every day.
 
-### 📒 记账 · Expenses
+### 📒 · Expenses
 
 简单好用的记账本，买菜、水果、出行……自动生成饼图和柱状图，一眼看清这个月钱花在哪了。支持自定义分类。
 
 > A simple expense tracker — groceries, fruit, transport... Auto-generates pie charts and bar graphs so you can see where the money goes. Custom categories supported.
 
-### 🔔 管理后台 · Admin Panel
+### 🔔 · Admin Panel
 
 家人通过口令进入后台，查看心情动态并手动回复。不是冷冰冰的自动回复，是真真切切有人在看、在关心。
 
@@ -67,7 +67,7 @@ It's simple: log your mood, do a daily check-in, track some expenses. No social 
 
 ## 技术栈 / Tech Stack
 
-| 层 Layer | 用了啥 What |
+|  Layer |  What |
 |---|---|
 | 前端 Frontend | React 18 + Vite 6 + Recharts |
 | 后端 Backend | Express 4 + SQLite (WAL mode) |
@@ -77,7 +77,7 @@ It's simple: log your mood, do a daily check-in, track some expenses. No social 
 
 ---
 
-## 快速开始 / Quick Start
+## Quick Start
 
 ### 本地跑起来 / Run Locally
 
