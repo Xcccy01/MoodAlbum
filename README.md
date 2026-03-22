@@ -5,7 +5,7 @@
 <h1 align="center">MoodAlbum 🌿</h1>
 
 <p align="center">
-  <b>情绪链接</b><br/>
+  <b>情感链接</b><br/>
   <i>A soft, warm little app for sharing feelings across generations</i>
 </p>
 
