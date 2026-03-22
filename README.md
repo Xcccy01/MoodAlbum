@@ -65,6 +65,58 @@ It's simple: log your mood, do a daily check-in, track some expenses. No social 
 
 ---
 
+## 界面预览 / Screenshots
+
+### 心情 · Mood
+
+<p align="center">
+  <img src="docs/readme-images/demo-mood-home.jpg" alt="Mood home screen" width="320" />
+</p>
+<p align="center">
+  <sub>心情主页：最近回复、快捷记录和历史心情一屏可见</sub>
+</p>
+
+<p align="center">
+  <img src="docs/readme-images/demo-mood-toast.jpg" alt="Mood record success toast" width="320" />
+</p>
+<p align="center">
+  <sub>记录成功弹层：轻量确认反馈，不打断使用节奏</sub>
+</p>
+
+### 养生 · Wellness
+
+<p align="center">
+  <img src="docs/readme-images/demo-wellness.jpg" alt="Wellness check-in screen" width="320" />
+</p>
+<p align="center">
+  <sub>每日打卡、植物成长和养生小贴士集中展示</sub>
+</p>
+
+### 记账 · Expenses
+
+<p align="center">
+  <img src="docs/readme-images/demo-expense-entry.jpg" alt="Expense entry screen" width="320" />
+</p>
+<p align="center">
+  <sub>记账录入：金额、分类和自定义分类在同一页完成</sub>
+</p>
+
+<p align="center">
+  <img src="docs/readme-images/demo-expense-detail.jpg" alt="Expense detail screen" width="320" />
+</p>
+<p align="center">
+  <sub>明细视图：按月、按分类展开查看每一笔支出</sub>
+</p>
+
+<p align="center">
+  <img src="docs/readme-images/demo-expense-summary.jpg" alt="Expense summary screen" width="320" />
+</p>
+<p align="center">
+  <sub>汇总视图：分类占比和最近 7 天趋势一眼看清</sub>
+</p>
+
+---
+
 ## 技术栈 / Tech Stack
 
 |  Layer |  What |
