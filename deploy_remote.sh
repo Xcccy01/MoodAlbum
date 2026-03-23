@@ -5,6 +5,7 @@ APP_DIR=/home/ubuntu/family-care-app
 ARCHIVE=/home/ubuntu/family-care-deploy.tar.gz
 SUDO_PASS="${SUDO_PASSWORD:?请先设置环境变量 SUDO_PASSWORD}"
 DATABASE_URL="${DATABASE_URL:?请先设置环境变量 DATABASE_URL}"
+DATABASE_MIGRATION_URL="${DATABASE_MIGRATION_URL:-$DATABASE_URL}"
 SESSION_SECRET="${SESSION_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -d '\n')}"
 PLATFORM_ADMIN_SECRET="${PLATFORM_ADMIN_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -d '\n')}"
 
@@ -17,11 +18,14 @@ cat > .env <<ENVEOF
 DATABASE_URL=$DATABASE_URL
 SESSION_SECRET=$SESSION_SECRET
 PLATFORM_ADMIN_SECRET=$PLATFORM_ADMIN_SECRET
+RUN_MIGRATIONS=false
 PORT=8787
 ENVEOF
 
 npm install
 npm run build
+DATABASE_MIGRATION_URL="$DATABASE_MIGRATION_URL" DATABASE_URL="$DATABASE_URL" npm run db:migrate
+DATABASE_URL="$DATABASE_URL" RUN_MIGRATIONS=false npm run db:check
 
 cat > /tmp/family-care-app.service <<'SERVICEEOF'
 [Unit]

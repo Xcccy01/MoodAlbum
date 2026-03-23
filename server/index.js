@@ -7,7 +7,9 @@ import { runMigrations } from "./db/migrate.js";
 async function main() {
   const config = createConfig();
   const database = await createDatabase(config);
-  await runMigrations(database);
+  if (config.runMigrationsOnBoot) {
+    await runMigrations(database);
+  }
 
   const app = createApp({ config, database });
   const server = createServer(app);

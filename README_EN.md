@@ -122,8 +122,10 @@ Recommended local `.env`:
 
 ```env
 DATABASE_URL=
+DATABASE_MIGRATION_URL=
 SESSION_SECRET=change-me
 PLATFORM_ADMIN_SECRET=change-this-too
+RUN_MIGRATIONS=true
 PORT=8787
 ```
 
@@ -175,14 +177,23 @@ Edit `.env`:
 
 ```env
 DATABASE_URL=postgres://moodalbum:your-db-password@127.0.0.1:5432/moodalbum_public
+DATABASE_MIGRATION_URL=postgres://moodalbum_migrator:your-migration-password@127.0.0.1:5432/moodalbum_public
 SESSION_SECRET=replace-with-a-long-random-string
 PLATFORM_ADMIN_SECRET=another-random-string-for-platform-update-api
+RUN_MIGRATIONS=false
 PORT=8787
 ```
+
+Notes:
+- `DATABASE_URL` is the runtime connection string and should point to a least-privilege role
+- `DATABASE_MIGRATION_URL` is only for deployment-time migrations and can use a higher-privilege role
+- production should usually run with `RUN_MIGRATIONS=false`
 
 ### 4. Verify startup
 
 ```bash
+npm run db:migrate
+npm run db:check
 node server/index.js
 ```
 
@@ -248,6 +259,9 @@ sudo systemctl restart nginx
 Before opening it to real users:
 - enable HTTPS with Certbot so production cookies can use `Secure`
 - run a daily `pg_dump` backup and keep at least 7 days
+
+Least-privilege SQL template:
+- `server/db/sql/production_least_privilege.sql`
 
 Example backup command:
 

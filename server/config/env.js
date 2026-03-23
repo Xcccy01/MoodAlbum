@@ -6,20 +6,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..", "..");
 
-export function createConfig() {
+export function createConfig({ preferMigrationUrl = false } = {}) {
   loadEnvFile(path.join(rootDir, ".env"));
 
-  return {
-    nodeEnv: process.env.NODE_ENV || "development",
+  const nodeEnv = process.env.NODE_ENV || "development";
+  const databaseUrl =
+    (preferMigrationUrl ? process.env.DATABASE_MIGRATION_URL : "") ||
+    process.env.DATABASE_URL ||
+    "";
+  const sessionSecret = process.env.SESSION_SECRET || "change-me";
+  const config = {
+    nodeEnv,
+    isProduction: nodeEnv === "production",
     port: Number(process.env.PORT || 8787),
-    databaseUrl: process.env.DATABASE_URL || "",
-    sessionSecret: process.env.SESSION_SECRET || "change-me",
-    secureCookies: process.env.NODE_ENV === "production",
+    databaseUrl,
+    sessionSecret,
+    secureCookies: nodeEnv === "production",
     platformAdminSecret: process.env.PLATFORM_ADMIN_SECRET || "",
+    runMigrationsOnBoot: process.env.RUN_MIGRATIONS !== "false",
   };
+
+  validateConfig(config);
+  return config;
 }
 
-function loadEnvFile(filePath) {
+export function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return;
   }
@@ -50,5 +61,19 @@ function loadEnvFile(filePath) {
     }
 
     process.env[key] = value;
+  }
+}
+
+function validateConfig(config) {
+  if (!config.isProduction) {
+    return;
+  }
+
+  if (!config.databaseUrl) {
+    throw new Error("生产环境必须设置 DATABASE_URL。");
+  }
+
+  if (!config.sessionSecret || config.sessionSecret === "change-me") {
+    throw new Error("生产环境必须设置安全的 SESSION_SECRET。");
   }
 }

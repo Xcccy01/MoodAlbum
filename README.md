@@ -123,8 +123,10 @@ npm run dev
 
 ```env
 DATABASE_URL=
+DATABASE_MIGRATION_URL=
 SESSION_SECRET=change-me
 PLATFORM_ADMIN_SECRET=change-this-too
+RUN_MIGRATIONS=true
 PORT=8787
 ```
 
@@ -176,14 +178,23 @@ cp .env.example .env
 
 ```env
 DATABASE_URL=postgres://moodalbum:你的数据库密码@127.0.0.1:5432/moodalbum_public
+DATABASE_MIGRATION_URL=postgres://moodalbum_migrator:迁移账号密码@127.0.0.1:5432/moodalbum_public
 SESSION_SECRET=一串足够长的随机字符
 PLATFORM_ADMIN_SECRET=另一串平台更新密钥
+RUN_MIGRATIONS=false
 PORT=8787
 ```
+
+说明：
+- `DATABASE_URL` 给应用运行时使用，建议绑定最小权限角色
+- `DATABASE_MIGRATION_URL` 只在部署时执行迁移，建议绑定较高权限角色
+- 生产环境建议把 `RUN_MIGRATIONS=false`
 
 ### 4. 试运行
 
 ```bash
+npm run db:migrate
+npm run db:check
 node server/index.js
 ```
 
@@ -249,6 +260,9 @@ sudo systemctl restart nginx
 建议至少补这两件事：
 - 用 Certbot 给 Nginx 配好 HTTPS，生产环境 cookie 才会带 `Secure`
 - 每天做一次 `pg_dump`，至少保留 7 天
+
+最小权限 SQL 模板见：
+- `server/db/sql/production_least_privilege.sql`
 
 备份示例：
 
