@@ -1,0 +1,42 @@
+import { CHINA_TIME_ZONE, PLANT_STAGES } from "../config/constants.js";
+
+export function nowIso() {
+  return new Date().toISOString();
+}
+
+export function getChinaDateString(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CHINA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const values = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function toDayNumber(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return Date.UTC(year, month - 1, day) / 86400000;
+}
+
+export function getPlantStage(totalCount) {
+  let current = PLANT_STAGES[0];
+  for (const stage of PLANT_STAGES) {
+    if (totalCount >= stage.threshold) {
+      current = stage;
+    }
+  }
+  return current;
+}
+
+export function getNextPlantStage(totalCount) {
+  return PLANT_STAGES.find((stage) => stage.threshold > totalCount) || null;
+}

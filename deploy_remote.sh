@@ -3,9 +3,10 @@ set -euo pipefail
 
 APP_DIR=/home/ubuntu/family-care-app
 ARCHIVE=/home/ubuntu/family-care-deploy.tar.gz
-PASSCODE="${ADMIN_PASSCODE:?请先设置环境变量 ADMIN_PASSCODE}"
 SUDO_PASS="${SUDO_PASSWORD:?请先设置环境变量 SUDO_PASSWORD}"
-SESSION_SECRET="$(head -c 48 /dev/urandom | base64 | tr -d '\n')"
+DATABASE_URL="${DATABASE_URL:?请先设置环境变量 DATABASE_URL}"
+SESSION_SECRET="${SESSION_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -d '\n')}"
+PLATFORM_ADMIN_SECRET="${PLATFORM_ADMIN_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -d '\n')}"
 
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR"
@@ -13,18 +14,19 @@ tar -xzf "$ARCHIVE" -C "$APP_DIR"
 cd "$APP_DIR"
 
 cat > .env <<ENVEOF
-ADMIN_PASSCODE=$PASSCODE
+DATABASE_URL=$DATABASE_URL
 SESSION_SECRET=$SESSION_SECRET
+PLATFORM_ADMIN_SECRET=$PLATFORM_ADMIN_SECRET
 PORT=8787
 ENVEOF
 
-npm install --omit=dev
-mkdir -p server/data
+npm install
+npm run build
 
 cat > /tmp/family-care-app.service <<'SERVICEEOF'
 [Unit]
-Description=Family Care App
-After=network.target
+Description=Family Care Public App
+After=network.target postgresql.service
 
 [Service]
 Type=simple
