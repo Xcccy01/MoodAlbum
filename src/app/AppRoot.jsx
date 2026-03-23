@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.js";
+import { APP_NAME } from "../lib/constants.js";
 
 const AuthPage = lazy(() =>
   import("../features/auth/AuthPage.jsx").then((module) => ({ default: module.AuthPage }))
@@ -18,11 +19,15 @@ const CareApp = lazy(() =>
 
 function LoadingScreen({ text }) {
   return (
-    <div className="screen-center">
-      <div className="surface-card auth-panel">
-        <div className="eyebrow">MoodAlbum</div>
-        <h1>{text}</h1>
-        <p className="muted-text">稍等一下，正在恢复你的登录状态和家庭信息。</p>
+    <div className="login-shell">
+      <div className="login-card auth-card">
+        <div className="section-note">{APP_NAME}</div>
+        <div className="meta-title" style={{ fontSize: 30, marginTop: 8 }}>
+          {text}
+        </div>
+        <p className="meta-subtitle" style={{ marginTop: 10, lineHeight: 1.8 }}>
+          稍等一下，正在恢复你的登录状态和家庭信息。
+        </p>
       </div>
     </div>
   );
@@ -30,11 +35,15 @@ function LoadingScreen({ text }) {
 
 function NoCareAccess({ onGoHome }) {
   return (
-    <div className="screen-center">
-      <div className="surface-card auth-panel">
-        <div className="eyebrow">无权限</div>
-        <h1>这个入口只对家人回复者开放</h1>
-        <p className="muted-text">如果你只是记录自己的心情、养生和记账内容，请返回主页继续使用。</p>
+    <div className="login-shell">
+      <div className="login-card auth-card">
+        <div className="section-note">无权限</div>
+        <div className="meta-title" style={{ fontSize: 30, marginTop: 8 }}>
+          这个入口只对家人回复者开放
+        </div>
+        <p className="meta-subtitle" style={{ marginTop: 10, lineHeight: 1.8 }}>
+          如果你只是记录自己的心情、养生和记账内容，请返回主页继续使用。
+        </p>
         <button type="button" className="primary-button" onClick={onGoHome}>
           返回主页
         </button>
@@ -56,6 +65,13 @@ function normalizePath(pathname) {
 function navigateTo(path) {
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function buildCapabilities(membership) {
+  return {
+    canAccessCare: Boolean(membership && ["owner", "caregiver"].includes(membership.role)),
+    canManageInvites: Boolean(membership && membership.role === "owner"),
+  };
 }
 
 export default function AppRoot() {
@@ -86,17 +102,21 @@ export default function AppRoot() {
     refreshSession();
   }, []);
 
+  function applySessionPayload(result) {
+    setSession({
+      checking: false,
+      authenticated: Boolean(result.authenticated),
+      user: result.user,
+      household: result.household,
+      membership: result.membership,
+      capabilities: result.capabilities,
+    });
+  }
+
   async function refreshSession() {
     try {
       const result = await api("/api/me");
-      setSession({
-        checking: false,
-        authenticated: Boolean(result.authenticated),
-        user: result.user,
-        household: result.household,
-        membership: result.membership,
-        capabilities: result.capabilities,
-      });
+      applySessionPayload(result);
     } catch {
       setSession((prev) => ({
         ...prev,
@@ -111,6 +131,22 @@ export default function AppRoot() {
         },
       }));
     }
+  }
+
+  function handleOnboardingSuccess(payload) {
+    if (!payload?.household || !payload?.membership) {
+      return refreshSession();
+    }
+
+    setSession((prev) => ({
+      ...prev,
+      checking: false,
+      household: payload.household,
+      membership: payload.membership,
+      capabilities: buildCapabilities(payload.membership),
+    }));
+    navigateTo("/");
+    return Promise.resolve();
   }
 
   async function logout() {
@@ -139,7 +175,7 @@ export default function AppRoot() {
   }
 
   if (session.checking) {
-    return <LoadingScreen text="正在准备公开版空间" />;
+    return <LoadingScreen text="正在准备家庭空间" />;
   }
 
   if (!session.authenticated) {
@@ -153,7 +189,7 @@ export default function AppRoot() {
   if (!session.household) {
     return (
       <Suspense fallback={<LoadingScreen text="正在载入家庭向导" />}>
-        <OnboardingPage session={session} onSuccess={refreshSession} onLogout={logout} />
+        <OnboardingPage session={session} onSuccess={handleOnboardingSuccess} onLogout={logout} />
       </Suspense>
     );
   }

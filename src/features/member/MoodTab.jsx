@@ -1,198 +1,267 @@
-import { useMemo, useState } from "react";
 import { CUSTOM_MOOD_ICONS, MOODS } from "../../lib/constants.js";
 import { formatDateTime, getReplyBadge } from "../../lib/format.js";
+import { getMemberReplyState } from "../../lib/ui.js";
+import {
+  CUSTOM_MOOD_ARTS,
+  getMoodArtName,
+  getMoodDecorationArtName,
+  IllustrationIcon,
+  pickFromList,
+} from "../shared/IllustrationIcon.jsx";
 
 export function MoodTab({
   moodItems,
-  customMoods,
   latestReply,
   unreadCount,
-  onLogMood,
-  onAddCustomMood,
+  customMoods,
+  showCustomMoodPanel,
+  setShowCustomMoodPanel,
+  customMoodForm,
+  setCustomMoodForm,
+  moodSubmitting,
+  onSubmitMood,
+  onSubmitCustomMood,
+  onCreateCustomMood,
   onDeleteCustomMood,
-  onMarkRepliesRead,
 }) {
-  const [draftLabel, setDraftLabel] = useState("");
-  const [draftIcon, setDraftIcon] = useState(CUSTOM_MOOD_ICONS[0]);
-  const unreadReplyIds = useMemo(
-    () =>
-      moodItems
-        .flatMap((item) => item.replies || [])
-        .filter((reply) => !reply.isRead)
-        .map((reply) => reply.id),
-    [moodItems]
-  );
-
-  async function submitCustomMood(event) {
-    event.preventDefault();
-    if (!draftLabel.trim()) {
-      return;
-    }
-    const created = await onAddCustomMood({
-      label: draftLabel,
-      icon: draftIcon,
-    });
-    if (created) {
-      setDraftLabel("");
-      setDraftIcon(CUSTOM_MOOD_ICONS[0]);
-    }
-  }
-
   return (
-    <section className="stack-block">
-      <div className="surface-card hero-card">
-        <div className="header-row">
-          <div>
-            <div className="eyebrow">今天感觉怎么样</div>
-            <h2>点一下就能记下来</h2>
+    <>
+      {latestReply ? (
+        <section className={`banner ${unreadCount > 0 ? "is-unread" : ""}`}>
+          <div className="row-between">
+            <div>
+              <div
+                style={{
+                  fontWeight: 800,
+                  marginBottom: 8,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <IllustrationIcon name="message" className="inline-art-icon" />
+                <span>最新回复</span>
+              </div>
+              <div style={{ fontSize: 17, lineHeight: 1.8 }}>{latestReply.content}</div>
+              <div style={{ marginTop: 10, opacity: 0.9, fontSize: 13 }}>
+                <IllustrationIcon
+                  name={getMoodArtName(
+                    latestReply.moodKey,
+                    latestReply.moodLabel,
+                    latestReply.moodIcon
+                  )}
+                  className="inline-art-icon"
+                />{" "}
+                {latestReply.moodLabel} · {formatDateTime(latestReply.createdAt)}
+              </div>
+            </div>
           </div>
-          {unreadCount > 0 ? (
-            <button
-              type="button"
-              className="ghost-button"
-              onClick={() => onMarkRepliesRead(unreadReplyIds)}
-            >
-              标记回复已读
-            </button>
-          ) : null}
-        </div>
+        </section>
+      ) : null}
 
-        <div className="mood-grid">
+      <section className="panel">
+        <div className="section-title">
+          <h2>今天感觉怎么样</h2>
+          <span className="section-note">点一下就能记下来</span>
+        </div>
+        <div className="mood-cloud">
           {MOODS.map((mood) => (
             <button
               type="button"
               key={mood.key}
-              className="mood-button"
-              onClick={() => onLogMood({ moodKey: mood.key })}
+              className={`mood-bubble ${mood.size}`}
+              disabled={moodSubmitting === mood.key}
+              style={{
+                top: mood.position.top,
+                left: mood.position.left,
+                "--rotation": mood.rotate,
+                transform: `rotate(${mood.rotate})`,
+                background: `linear-gradient(145deg, ${mood.accent}, rgba(255,255,255,0.28))`,
+              }}
+              onClick={() => onSubmitMood(mood)}
               data-testid={`mood-${mood.key}`}
             >
-              <span>{mood.icon}</span>
-              <strong>{mood.label}</strong>
-            </button>
-          ))}
-          {customMoods.map((mood) => (
-            <div key={mood.id} className="mood-card custom-card">
-              <button
-                type="button"
-                className="mood-button mood-button-custom"
-                onClick={() => onLogMood({ customMoodId: mood.id })}
-              >
-                <span>{mood.icon}</span>
-                <strong>{mood.label}</strong>
-              </button>
-              <button
-                type="button"
-                className="icon-button danger"
-                onClick={() => onDeleteCustomMood(mood.id)}
-                aria-label={`删除自定义心情 ${mood.label}`}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <form className="surface-card nested-card" onSubmit={submitCustomMood}>
-        <div className="header-row">
-          <div>
-            <div className="eyebrow">添加自己的心情</div>
-            <p className="muted-text">最多保留 12 个，用你习惯的词去记录。</p>
-          </div>
-        </div>
-
-        <div className="field-row">
-          <input
-            className="text-input"
-            placeholder="例如：踏实、挂念、想出门"
-            value={draftLabel}
-            onChange={(event) => setDraftLabel(event.target.value)}
-            data-testid="custom-mood-label"
-          />
-          <button type="submit" className="secondary-button" data-testid="custom-mood-submit">
-            添加心情
-          </button>
-        </div>
-
-        <div className="emoji-grid">
-          {CUSTOM_MOOD_ICONS.map((icon) => (
-            <button
-              type="button"
-              key={icon}
-              className={`emoji-pill ${draftIcon === icon ? "is-active" : ""}`}
-              onClick={() => setDraftIcon(icon)}
-            >
-              {icon}
+              <span className="mood-icon">
+                <IllustrationIcon
+                  name={getMoodArtName(mood.key, mood.label, mood.icon)}
+                  className="bubble-illustration"
+                />
+              </span>
+              <span className="mood-label">
+                {moodSubmitting === mood.key ? "记录中..." : mood.label}
+              </span>
+              <span className="mood-decoration">
+                <IllustrationIcon
+                  name={getMoodDecorationArtName(mood.key)}
+                  className="mini-illustration"
+                />
+              </span>
             </button>
           ))}
         </div>
-      </form>
 
-      <div className="surface-card nested-card">
-        <div className="header-row">
-          <div>
-            <div className="eyebrow">最新回复</div>
-            <h3>有人在看，也有人在关心</h3>
-          </div>
-          <span className={`status-pill ${unreadCount > 0 ? "warning" : "success"}`}>
-            {unreadCount > 0 ? `${unreadCount} 条未读` : "已读完"}
+        <div className="divider" style={{ marginTop: 18 }}>
+          <span>
+            <IllustrationIcon name="sparkle" className="inline-art-icon" /> 添加自己的心情
           </span>
         </div>
 
-        {latestReply ? (
-          <div className="reply-card">
-            <div className="reply-body">{latestReply.content}</div>
-            <div className="muted-text">
-              {latestReply.moodIcon} {latestReply.moodLabel} · {formatDateTime(latestReply.createdAt)}
+        <div className="button-row" style={{ marginBottom: 14 }}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowCustomMoodPanel((prev) => !prev)}
+          >
+            {showCustomMoodPanel ? "收起添加面板" : "添加心情"}
+          </button>
+          <span className="section-note">最多 12 个，点一下也能直接记录。</span>
+        </div>
+
+        {showCustomMoodPanel ? (
+          <div className="inline-panel custom-mood-editor" style={{ marginBottom: 14 }}>
+            <div className="field">
+              <label>心情名称</label>
+              <input
+                className="text-input"
+                value={customMoodForm.label}
+                onChange={(event) =>
+                  setCustomMoodForm((prev) => ({ ...prev, label: event.target.value }))
+                }
+                placeholder="例如：踏实、想出门、有点想念"
+                maxLength={12}
+                data-testid="custom-mood-label"
+              />
+            </div>
+            <div className="field">
+              <label>选择图标</label>
+              <div className="icon-grid">
+                {CUSTOM_MOOD_ARTS.map((artName, index) => (
+                  <button
+                    type="button"
+                    key={artName}
+                    className={`icon-chip ${customMoodForm.icon === CUSTOM_MOOD_ICONS[index] ? "active" : ""}`}
+                    onClick={() =>
+                      setCustomMoodForm((prev) => ({
+                        ...prev,
+                        icon: CUSTOM_MOOD_ICONS[index],
+                      }))
+                    }
+                  >
+                    <IllustrationIcon name={artName} className="picker-illustration" />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="button-row">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={onCreateCustomMood}
+                data-testid="custom-mood-submit"
+              >
+                确认添加
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() => setShowCustomMoodPanel(false)}
+              >
+                取消
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="empty-card">还没有新的回复，先把今天的感受轻轻记下来。</div>
-        )}
-      </div>
+        ) : null}
 
-      <div className="surface-card nested-card">
-        <div className="header-row">
-          <div>
-            <div className="eyebrow">最近心情记录</div>
-            <h3>每一条都只属于你自己</h3>
-          </div>
-        </div>
-
-        <div className="stack-list">
-          {moodItems.length ? (
-            moodItems.map((item) => {
-              const badge = getReplyBadge(item.replyStatus);
-              return (
-                <article className="list-card" key={item.id} data-testid="mood-history-item">
-                  <div className="header-row">
-                    <div>
-                      <strong>{item.icon} {item.label}</strong>
-                      <div className="muted-text">{formatDateTime(item.createdAt)}</div>
-                    </div>
-                    <span className={`status-pill ${badge.tone}`}>{badge.label}</span>
-                  </div>
-
-                  {item.replies?.length ? (
-                    <div className="stack-list tight">
-                      {item.replies.map((reply) => (
-                        <div className="reply-card" key={reply.id}>
-                          <div className="reply-body">{reply.content}</div>
-                          <div className="muted-text">{formatDateTime(reply.createdAt)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="muted-text">还没有新的回复，先把当下感受记下来就很好。</div>
-                  )}
-                </article>
-              );
-            })
+        <div className="custom-mood-list">
+          {customMoods.length === 0 ? (
+            <div className="empty-card">
+              还没有自定义心情。可以补充更贴近自己日常表达的状态，比如“踏实”“想散步”“有点想念”。
+            </div>
           ) : (
-            <div className="empty-card">今天还没有心情记录，先选一张情绪卡片开始吧。</div>
+            customMoods.map((mood) => (
+              <div className="custom-mood-pill" key={mood.id}>
+                <button
+                  type="button"
+                  className="custom-mood-main"
+                  disabled={moodSubmitting === mood.id}
+                  onClick={() => onSubmitCustomMood(mood)}
+                >
+                  <span className="custom-mood-icon">
+                    <IllustrationIcon
+                      name={pickFromList(
+                        `${mood.id}:${mood.label}:${mood.icon}`,
+                        CUSTOM_MOOD_ARTS
+                      )}
+                      className="bubble-illustration"
+                    />
+                  </span>
+                  <span>{moodSubmitting === mood.id ? "记录中..." : mood.label}</span>
+                </button>
+                <button
+                  type="button"
+                  className="custom-mood-remove"
+                  onClick={() => onDeleteCustomMood(mood.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))
           )}
         </div>
+      </section>
+
+      <div className="divider">
+        <span>
+          <IllustrationIcon name="message" className="inline-art-icon" /> 最近心情记录
+        </span>
       </div>
-    </section>
+
+      <section className="list-stack">
+        {moodItems.length === 0 ? (
+          <div className="empty-card">
+            还没有记录。点一下上面的心情气泡，就会从这里开始留下今天的状态。
+          </div>
+        ) : (
+          moodItems.map((item) => {
+            const badge = getReplyBadge(getMemberReplyState(item));
+            return (
+              <article className="list-card" key={item.id} data-testid="mood-history-item">
+                <div className="row-between">
+                  <div className="mood-meta">
+                    <div className="emoji-box">
+                      <IllustrationIcon
+                        name={getMoodArtName(item.moodKey, item.label, item.icon)}
+                        className="card-illustration"
+                      />
+                    </div>
+                    <div>
+                      <div className="meta-title">{item.label}</div>
+                      <div className="meta-subtitle">{formatDateTime(item.createdAt)}</div>
+                    </div>
+                  </div>
+                  <span className={`status-pill ${badge.tone}`}>{badge.label}</span>
+                </div>
+                {item.replies.length ? (
+                  <div className="reply-stack">
+                    {item.replies.map((reply) => (
+                      <div className="reply-item" key={reply.id}>
+                        <div style={{ fontSize: 15, lineHeight: 1.75 }}>{reply.content}</div>
+                        <div className="meta-subtitle" style={{ marginTop: 6 }}>
+                          {formatDateTime(reply.createdAt)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="meta-subtitle" style={{ marginTop: 12 }}>
+                    还没有新的回复，先把当下感受记下来就很好。
+                  </div>
+                )}
+              </article>
+            );
+          })
+        )}
+      </section>
+    </>
   );
 }

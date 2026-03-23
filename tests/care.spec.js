@@ -11,6 +11,7 @@ async function register(page, username, password) {
 async function createHousehold(page, name) {
   await page.getByTestId("create-household-name").fill(name);
   await page.getByTestId("create-household-submit").click();
+  await expect(page.getByRole("heading", { name: /早上好呀/ })).toBeVisible();
 }
 
 async function logout(page) {

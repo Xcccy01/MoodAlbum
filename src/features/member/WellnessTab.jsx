@@ -1,69 +1,134 @@
-import { PLANT_STAGE_META, WELLNESS_TIPS } from "../../lib/constants.js";
+import { getCurrentSeason } from "../../lib/ui.js";
+import { getPlantArtName, IllustrationIcon, pickFromList } from "../shared/IllustrationIcon.jsx";
 
-function getProgressPercent(totalCount, nextStageAt) {
-  if (!nextStageAt) {
-    return 100;
+export function WellnessTab({
+  tips,
+  onRefreshTips,
+  checkinProgress,
+  checkinLoading,
+  onSubmitCheckin,
+  plantMeta,
+  progressPercent,
+}) {
+  const season = getCurrentSeason();
+  const recentDateSet = new Set(checkinProgress.recentDates || []);
+  const recentDays = [];
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - offset);
+    recentDays.push(date.toISOString().slice(0, 10));
   }
-  return Math.max(8, Math.min(100, Math.round((totalCount / nextStageAt) * 100)));
-}
-
-export function WellnessTab({ progress, onCheckin, loading }) {
-  const plantMeta = PLANT_STAGE_META[progress.plantStage] || PLANT_STAGE_META["种子"];
-  const tip = WELLNESS_TIPS[progress.totalCount % WELLNESS_TIPS.length];
 
   return (
-    <section className="stack-block">
-      <div className="surface-card hero-card">
-        <div className="header-row">
+    <>
+      <section className="plant-card">
+        <div className="plant-top">
           <div>
-            <div className="eyebrow">每日打卡，植物成长</div>
-            <h2>
-              {plantMeta.emoji} 当前阶段 · {progress.plantStage}
-            </h2>
+            <div className="section-note">每日打卡，植物成长</div>
+            <div className="section-title" style={{ marginTop: 8 }}>
+              <h2 style={{ margin: 0 }}>当前时节 · {season}季养生</h2>
+            </div>
+            <div style={{ fontSize: 16, lineHeight: 1.8 }}>{plantMeta.message}</div>
           </div>
-          <span className="status-pill success">{progress.streakCount} 天连续</span>
-        </div>
-
-        <p className="muted-text">{plantMeta.message}</p>
-
-        <div className="stats-grid">
-          <div className="stat-card">
-            <strong>{progress.totalCount}</strong>
-            <span>累计天数</span>
-          </div>
-          <div className="stat-card">
-            <strong>{progress.streakCount}</strong>
-            <span>连续天数</span>
-          </div>
-          <div className="stat-card">
-            <strong>{progress.nextStageAt || "已满"}</strong>
-            <span>下一阶段</span>
+          <div className="plant-avatar">
+            <IllustrationIcon
+              name={getPlantArtName(checkinProgress.plantStage)}
+              className="plant-illustration"
+            />
           </div>
         </div>
 
+        <div className="plant-stats">
+          <div className="stat-card">
+            <div className="stat-value">{checkinProgress.totalCount}</div>
+            <div className="meta-subtitle">累计天数</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{checkinProgress.streakCount}</div>
+            <div className="meta-subtitle">连续天数</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ fontSize: 20 }}>
+              {checkinProgress.plantStage}
+            </div>
+            <div className="meta-subtitle">成长阶段</div>
+          </div>
+        </div>
+
+        <div className="meta-subtitle">距离下一阶段还有一点点进度</div>
         <div className="progress-track">
-          <div
-            className="progress-fill"
-            style={{ width: `${getProgressPercent(progress.totalCount, progress.nextStageAt)}%` }}
-          />
+          <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
+        </div>
+        <div className="meta-subtitle">
+          {checkinProgress.nextStageAt
+            ? `累计达到 ${checkinProgress.nextStageAt} 天，就会进入下一阶段。`
+            : "已经进入最繁盛阶段，继续保持这份稳定的节奏。"}
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          disabled={progress.checkedInToday || loading}
-          onClick={onCheckin}
-          data-testid="checkin-button"
-        >
-          {progress.checkedInToday ? "今天已经打卡" : loading ? "正在记录..." : "今天来打卡"}
-        </button>
-      </div>
+        <div className="day-dots">
+          {recentDays.map((day) => (
+            <span
+              key={day}
+              className={`day-dot ${recentDateSet.has(day) ? "active" : ""}`}
+              title={day}
+            />
+          ))}
+        </div>
 
-      <div className="surface-card nested-card">
-        <div className="eyebrow">养生小贴士</div>
-        <h3>今天给自己一点轻柔提醒</h3>
-        <p className="tip-copy">{tip}</p>
+        <div className="button-row" style={{ marginTop: 18 }}>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={onSubmitCheckin}
+            disabled={checkinProgress.checkedInToday || checkinLoading}
+            data-testid="checkin-button"
+          >
+            {checkinProgress.checkedInToday
+              ? "今天已经打卡"
+              : checkinLoading
+                ? "记录中..."
+                : "今天来打卡"}
+          </button>
+        </div>
+      </section>
+
+      <section className="section-title">
+        <h2>养生小贴士</h2>
+        <button type="button" className="secondary-button" onClick={onRefreshTips}>
+          <IllustrationIcon name="sparkle" className="inline-art-icon" /> 换一批新贴士
+        </button>
+      </section>
+
+      <div className="tip-list">
+        {tips.map((tip, index) => (
+          <article className="tip-card" key={`${tip.icon}-${tip.tip}`}>
+            <span
+              className="tip-stripe"
+              style={{
+                background:
+                  index % 3 === 0
+                    ? "linear-gradient(180deg, var(--primary), rgba(107, 175, 123, 0.25))"
+                    : index % 3 === 1
+                      ? "linear-gradient(180deg, var(--yellow), rgba(232, 200, 88, 0.2))"
+                      : "linear-gradient(180deg, var(--peach), rgba(242, 168, 133, 0.25))",
+              }}
+            />
+            <div className="tip-icon">
+              <IllustrationIcon
+                name={pickFromList(`${tip.tip}:${index}`, [
+                  "wellness",
+                  "leaf",
+                  "sparkle",
+                  "bloom",
+                ])}
+                className="tip-illustration"
+              />
+            </div>
+            <div className="tip-text">{tip.tip}</div>
+          </article>
+        ))}
       </div>
-    </section>
+    </>
   );
 }

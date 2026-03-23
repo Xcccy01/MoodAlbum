@@ -1,28 +1,21 @@
-.auth-panel,
+.auth-panel {
+  width: min(420px, 100%);
+}
+
 .onboarding-panel {
   width: min(720px, 100%);
-  padding: 30px;
   display: grid;
   gap: 20px;
 }
 
-.segmented-control {
-  display: inline-flex;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.64);
+.onboarding-card {
+  display: grid;
+  gap: 14px;
 }
 
-.segmented-control button {
-  padding: 11px 16px;
-  background: transparent;
-  color: var(--muted);
-}
-
-.segmented-control button.is-active {
-  background: rgba(107, 175, 123, 0.14);
-  color: var(--primary-deep);
-  box-shadow: inset 0 0 0 1px rgba(107, 175, 123, 0.18);
+@media (max-width: 420px) {
+  .onboarding-panel .row-between {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

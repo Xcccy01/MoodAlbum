@@ -29,12 +29,22 @@ export function formatMonthLabel(monthKey) {
   return `${year}年${Number(month)}月`;
 }
 
-export function getReplyBadge(replyStatus) {
-  if (replyStatus === "replied") {
-    return { tone: "success", label: "已回复" };
+export function formatCurrency(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+export function getReplyBadge(state) {
+  if (state === "replied" || state === "read") {
+    return { tone: "replied", label: "已读" };
   }
-  if (replyStatus === "ignored") {
-    return { tone: "muted", label: "暂不回复" };
+
+  if (state === "unread") {
+    return { tone: "unread", label: "未读" };
   }
-  return { tone: "warning", label: "待回复" };
+
+  if (state === "ignored") {
+    return { tone: "ignored", label: "暂不回复" };
+  }
+
+  return { tone: "pending", label: "待回复" };
 }

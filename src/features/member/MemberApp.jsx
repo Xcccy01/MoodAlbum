@@ -1,53 +1,106 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../../lib/api.js";
-import { TABS } from "../../lib/constants.js";
+import {
+  APP_NAME,
+  CUSTOM_MOOD_ICONS,
+  DEFAULT_CATEGORY_ICONS,
+  NAV_ITEMS,
+} from "../../lib/constants.js";
+import { IllustrationIcon } from "../shared/IllustrationIcon.jsx";
+import { MoodToast } from "../shared/MoodToast.jsx";
 import { MoodTab } from "./MoodTab.jsx";
 import { WellnessTab } from "./WellnessTab.jsx";
+import {
+  COLORS,
+  getMonthKey,
+  getPlantMeta,
+  getPlantProgressPercent,
+  pickTipsBySeason,
+  toDateKey,
+} from "../../lib/ui.js";
 
 const ExpenseTab = lazy(() =>
   import("./ExpenseTab.jsx").then((module) => ({ default: module.ExpenseTab }))
 );
 
-function TabLoadingCard() {
-  return (
-    <div className="surface-card nested-card">
-      <div className="eyebrow">正在载入</div>
-      <p className="muted-text">这一部分内容正在按需加载。</p>
-    </div>
-  );
+function getGreeting() {
+  return "早上好呀";
 }
 
-function Header({ session, onNavigate, onLogout }) {
+function Header({ session, onLogout, unreadCount }) {
+  const headerDate = new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(new Date());
+
   return (
-    <header className="page-header">
-      <div>
-        <div className="eyebrow">{session.household.name}</div>
-        <h1>早上好呀，{session.user.username}</h1>
-        <p className="muted-text">今天也一起把日子照顾得更从容一点。</p>
-      </div>
-      <div className="header-actions">
-        {session.capabilities.canAccessCare ? (
-          <button type="button" className="secondary-button" onClick={() => onNavigate("/care")} data-testid="go-care">
-            进入家人回复端
+    <header className="header-card">
+      <div className="date-row">
+        <span>{headerDate}</span>
+        <div className="header-actions">
+          <div className="user-chip">
+            <IllustrationIcon name="clover" className="inline-art-icon" />
+            <span>{session.user.username}</span>
+          </div>
+          <button type="button" className="ghost-button" onClick={onLogout}>
+            退出登录
           </button>
-        ) : null}
-        <button type="button" className="ghost-button" onClick={onLogout}>
-          退出登录
-        </button>
+        </div>
+      </div>
+      <div className="greeting-row">
+        <div>
+          <h1>{getGreeting()}</h1>
+          <div className="section-note">
+            {unreadCount > 0 ? `有 ${unreadCount} 条新回复，记得看看。` : "今天也一起把日子照顾得更从容一点。"}
+          </div>
+        </div>
+        <div className="leaf-badge">
+          <IllustrationIcon name="clover" />
+        </div>
       </div>
     </header>
   );
 }
 
-export function MemberApp({ session, onNavigate, onLogout, onRequestError }) {
+function TabLoadingCard() {
+  return (
+    <div className="panel">
+      <div className="section-note">{APP_NAME}</div>
+      <div className="meta-title" style={{ marginTop: 8 }}>
+        正在载入
+      </div>
+      <p className="meta-subtitle" style={{ marginTop: 10, lineHeight: 1.8 }}>
+        这一部分内容正在按需准备。
+      </p>
+    </div>
+  );
+}
+
+function handleRequestError(requestError, onRequestError, setError) {
+  if (requestError instanceof ApiError && requestError.status === 401) {
+    onRequestError(requestError);
+    return;
+  }
+
+  setError(requestError.message);
+}
+
+export function MemberApp({ session, onLogout, onRequestError }) {
   const [activeTab, setActiveTab] = useState("mood");
-  const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [moodItems, setMoodItems] = useState([]);
   const [customMoods, setCustomMoods] = useState([]);
   const [latestReply, setLatestReply] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [moodSubmitting, setMoodSubmitting] = useState("");
+  const [showCustomMoodPanel, setShowCustomMoodPanel] = useState(false);
+  const [customMoodForm, setCustomMoodForm] = useState({
+    label: "",
+    icon: CUSTOM_MOOD_ICONS[0],
+  });
+  const [toastMood, setToastMood] = useState(null);
+  const [wellnessTips, setWellnessTips] = useState([]);
   const [checkinProgress, setCheckinProgress] = useState({
     checkedInToday: false,
     streakCount: 0,
@@ -59,10 +112,19 @@ export function MemberApp({ session, onNavigate, onLogout, onRequestError }) {
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [expenseMonths, setExpenseMonths] = useState([]);
-
-  useEffect(() => {
-    loadMemberData();
-  }, []);
+  const [expenseView, setExpenseView] = useState("detail");
+  const [expenseForm, setExpenseForm] = useState({ amount: "", categoryId: "", note: "" });
+  const [showCategoryPanel, setShowCategoryPanel] = useState(false);
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    icon: DEFAULT_CATEGORY_ICONS[0],
+  });
+  const [expandedMonths, setExpandedMonths] = useState({});
+  const [expandedCategories, setExpandedCategories] = useState({});
+  const [busyMessage, setBusyMessage] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [error, setError] = useState("");
+  const currentMonthKey = getMonthKey(new Date());
 
   const unreadReplyIds = useMemo(
     () =>
@@ -73,230 +135,461 @@ export function MemberApp({ session, onNavigate, onLogout, onRequestError }) {
     [moodItems]
   );
 
-  async function runRequest(label, task, successMessage) {
-    setBusy(label);
-    setError("");
-    setNotice("");
-    try {
-      const result = await task();
-      if (successMessage) {
-        setNotice(successMessage);
-      }
-      return result;
-    } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        onRequestError(requestError);
-        return null;
-      }
-      setError(requestError.message);
-      return null;
-    } finally {
-      setBusy("");
+  useEffect(() => {
+    void Promise.all([
+      refreshMoodData(),
+      refreshCustomMoods(),
+      refreshCheckins(),
+      refreshExpenses(),
+      refreshCategories(),
+    ]);
+    setWellnessTips(pickTipsBySeason());
+  }, []);
+
+  useEffect(() => {
+    if (expenseMonths.length === 0) {
+      return;
     }
-  }
 
-  async function loadMemberData(options = {}) {
-    const task = async () => {
-      const [moodsData, customMoodData, checkinData, categoriesData, expenseData] = await Promise.all([
-        api("/api/moods?limit=12"),
-        api("/api/custom-moods"),
-        api("/api/checkins/progress"),
-        api("/api/categories"),
-        api("/api/expenses/grouped"),
-      ]);
+    setExpandedMonths((prev) => {
+      if (Object.keys(prev).length > 0) {
+        return prev;
+      }
 
+      const next = {};
+      for (const month of expenseMonths) {
+        next[month.month] = month.month === currentMonthKey;
+      }
+      return next;
+    });
+  }, [expenseMonths, currentMonthKey]);
+
+  useEffect(() => {
+    if (categories.length && !expenseForm.categoryId) {
+      setExpenseForm((prev) => ({ ...prev, categoryId: categories[0].id }));
+    }
+  }, [categories, expenseForm.categoryId]);
+
+  useEffect(() => {
+    if (!toastMood) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => setToastMood(null), 1000);
+    return () => window.clearTimeout(timer);
+  }, [toastMood]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "mood" || unreadReplyIds.length === 0) {
+      return;
+    }
+
+    void markRepliesRead(unreadReplyIds, false);
+  }, [activeTab, unreadReplyIds]);
+
+  async function refreshMoodData() {
+    try {
+      const moodsData = await api("/api/moods?limit=8");
       setMoodItems(moodsData.items || []);
       setLatestReply(moodsData.latestReply || null);
       setUnreadCount(moodsData.unreadCount || 0);
-      setCustomMoods(customMoodData.items || []);
-      setCheckinProgress(checkinData);
-      setCategories(categoriesData.items || []);
-      setExpenseMonths(expenseData.months || []);
-    };
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    }
+  }
 
-    if (options.silent) {
-      try {
-        await task();
-        return true;
-      } catch (requestError) {
-        if (requestError instanceof ApiError && requestError.status === 401) {
-          onRequestError(requestError);
-          return false;
-        }
-        setError(requestError.message);
-        return false;
+  async function refreshCustomMoods() {
+    try {
+      const response = await api("/api/custom-moods");
+      setCustomMoods(response.items || []);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    }
+  }
+
+  async function refreshCheckins() {
+    try {
+      const response = await api("/api/checkins/progress");
+      setCheckinProgress(response);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    }
+  }
+
+  async function refreshCategories() {
+    try {
+      const response = await api("/api/categories");
+      const items = response.items || [];
+      setCategories(items);
+      return items;
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+      return [];
+    }
+  }
+
+  async function refreshExpenses() {
+    try {
+      const response = await api("/api/expenses/grouped");
+      setExpenseMonths(response.months || []);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    }
+  }
+
+  async function submitMood(mood) {
+    setError("");
+    setFeedback("");
+    setMoodSubmitting(mood.key);
+    try {
+      await api("/api/moods", { method: "POST", body: JSON.stringify({ moodKey: mood.key }) });
+      setToastMood(mood);
+      setFeedback("心情已记录。");
+      await refreshMoodData();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setMoodSubmitting("");
+    }
+  }
+
+  async function submitCustomMood(mood) {
+    setError("");
+    setFeedback("");
+    setMoodSubmitting(mood.id);
+    try {
+      await api("/api/moods", {
+        method: "POST",
+        body: JSON.stringify({ customMoodId: mood.id }),
+      });
+      setToastMood({ icon: mood.icon, label: mood.label });
+      setFeedback("心情已记录。");
+      await refreshMoodData();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setMoodSubmitting("");
+    }
+  }
+
+  async function markRepliesRead(replyIds, showFeedback = true) {
+    try {
+      await api("/api/replies/read", {
+        method: "POST",
+        body: JSON.stringify({ replyIds }),
+      });
+      if (showFeedback) {
+        setFeedback("已自动更新阅读状态。");
       }
-    }
-
-    const result = await runRequest("正在同步数据...", task);
-
-    return result;
-  }
-
-  async function logMood(payload) {
-    const result = await runRequest(
-      "正在记录心情...",
-      async () => api("/api/moods", { method: "POST", body: JSON.stringify(payload) }),
-      "心情已记录。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
-      return true;
-    }
-    return false;
-  }
-
-  async function addCustomMood(payload) {
-    const result = await runRequest(
-      "正在添加心情...",
-      async () => api("/api/custom-moods", { method: "POST", body: JSON.stringify(payload) }),
-      "自定义心情已添加。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
-      return true;
-    }
-    return false;
-  }
-
-  async function deleteCustomMood(id) {
-    const result = await runRequest(
-      "正在删除心情...",
-      async () => api(`/api/custom-moods/${id}`, { method: "DELETE" }),
-      "自定义心情已删除。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
-    }
-  }
-
-  async function markRepliesRead(replyIds = unreadReplyIds) {
-    if (!replyIds.length) {
-      return;
-    }
-    const result = await runRequest(
-      "正在标记已读...",
-      async () => api("/api/replies/read", { method: "POST", body: JSON.stringify({ replyIds }) }),
-      "回复状态已更新。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
+      await refreshMoodData();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
     }
   }
 
   async function submitCheckin() {
     setCheckinLoading(true);
-    const result = await runRequest(
-      "正在记录打卡...",
-      async () => api("/api/checkins", { method: "POST" }),
-      "今天已经打卡。"
-    );
-    if (result) {
+    setError("");
+    setFeedback("");
+    try {
+      const result = await api("/api/checkins", { method: "POST" });
+      setFeedback("今天已经打卡。");
       setCheckinProgress(result);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setCheckinLoading(false);
     }
-    setCheckinLoading(false);
   }
 
-  async function createCategory(payload) {
-    const result = await runRequest(
-      "正在添加分类...",
-      async () => api("/api/categories", { method: "POST", body: JSON.stringify(payload) }),
-      "分类已添加。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
-      return true;
+  async function submitExpense(event) {
+    event.preventDefault();
+    setBusyMessage("正在记下来...");
+    setError("");
+    setFeedback("");
+    try {
+      const result = await api("/api/expenses", {
+        method: "POST",
+        body: JSON.stringify(expenseForm),
+      });
+      setExpenseForm((prev) => ({ ...prev, amount: "", note: "" }));
+      setFeedback("账目已记录。");
+      setExpenseMonths(result.months || []);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
     }
-    return false;
+  }
+
+  async function createCustomMood() {
+    setBusyMessage("正在添加心情...");
+    setError("");
+    setFeedback("");
+    try {
+      const response = await api("/api/custom-moods", {
+        method: "POST",
+        body: JSON.stringify(customMoodForm),
+      });
+      setCustomMoodForm({ label: "", icon: CUSTOM_MOOD_ICONS[0] });
+      setShowCustomMoodPanel(false);
+      setFeedback(`已添加心情“${response.item.label}”。`);
+      await refreshCustomMoods();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
+    }
+  }
+
+  async function deleteCustomMood(id) {
+    if (!window.confirm("删除这个自定义心情后，历史记录仍会保留。继续吗？")) {
+      return;
+    }
+
+    setBusyMessage("正在删除心情...");
+    setError("");
+    setFeedback("");
+    try {
+      await api(`/api/custom-moods/${id}`, { method: "DELETE" });
+      setFeedback("自定义心情已删除。");
+      await refreshCustomMoods();
+      await refreshMoodData();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
+    }
+  }
+
+  async function createCategory() {
+    setBusyMessage("正在添加分类...");
+    setError("");
+    setFeedback("");
+    try {
+      const response = await api("/api/categories", {
+        method: "POST",
+        body: JSON.stringify(newCategory),
+      });
+      setShowCategoryPanel(false);
+      setNewCategory({ name: "", icon: DEFAULT_CATEGORY_ICONS[0] });
+      setExpenseForm((prev) => ({ ...prev, categoryId: response.category.id }));
+      setFeedback(`已添加分类“${response.category.name}”。`);
+      await refreshCategories();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
+    }
   }
 
   async function deleteCategory(id) {
-    const result = await runRequest(
-      "正在删除分类...",
-      async () => api(`/api/categories/${id}`, { method: "DELETE" }),
-      "分类已删除。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
+    if (!window.confirm("删除这个自定义分类后，历史账目仍会保留。继续吗？")) {
+      return;
     }
-  }
 
-  async function addExpense(payload) {
-    const result = await runRequest(
-      "正在记账...",
-      async () => api("/api/expenses", { method: "POST", body: JSON.stringify(payload) }),
-      "账目已记录。"
-    );
-    if (result) {
-      setExpenseMonths(result.months || []);
-      return true;
+    setBusyMessage("正在删除分类...");
+    setError("");
+    setFeedback("");
+    try {
+      await api(`/api/categories/${id}`, { method: "DELETE" });
+      const items = await refreshCategories();
+      if (expenseForm.categoryId === id && items.length) {
+        setExpenseForm((prev) => ({ ...prev, categoryId: items[0].id }));
+      }
+      setFeedback("自定义分类已删除。");
+      await refreshExpenses();
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
     }
-    return false;
   }
 
   async function deleteExpense(id) {
-    const result = await runRequest(
-      "正在删除账目...",
-      async () => api(`/api/expenses/${id}`, { method: "DELETE" }),
-      "账目已删除。"
-    );
-    if (result) {
-      await loadMemberData({ silent: true });
+    if (!window.confirm("要删除这条账目吗？")) {
+      return;
+    }
+
+    setBusyMessage("正在删除账目...");
+    setError("");
+    setFeedback("");
+    try {
+      const result = await api(`/api/expenses/${id}`, { method: "DELETE" });
+      setFeedback("账目已删除。");
+      setExpenseMonths(result.months || []);
+    } catch (requestError) {
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      setBusyMessage("");
     }
   }
 
+  function toggleMonth(month) {
+    setExpandedMonths((prev) => ({ ...prev, [month]: !prev[month] }));
+  }
+
+  function toggleCategory(month, categoryId) {
+    const key = `${month}__${categoryId}`;
+    setExpandedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  const totalExpenseCount = expenseMonths.reduce((sum, month) => sum + month.count, 0);
+  const totalExpenseAmount = expenseMonths.reduce(
+    (sum, month) => sum + month.totalAmount,
+    0
+  );
+  const pieData = [];
+  const categoryTotals = {};
+  const dailyTotals = {};
+  const today = new Date();
+  const recentDays = [];
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - offset);
+    recentDays.push({
+      key: toDateKey(date),
+      label: new Intl.DateTimeFormat("zh-CN", {
+        month: "numeric",
+        day: "numeric",
+      }).format(date),
+      amount: 0,
+    });
+  }
+
+  for (const month of expenseMonths) {
+    for (const category of month.categories || []) {
+      if (!categoryTotals[category.categoryId]) {
+        categoryTotals[category.categoryId] = { name: category.label, value: 0 };
+      }
+      categoryTotals[category.categoryId].value += category.totalAmount;
+
+      for (const item of category.items || []) {
+        const dayKey = item.spentAt.slice(0, 10);
+        dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + item.amount;
+      }
+    }
+  }
+
+  for (const key of Object.keys(categoryTotals)) {
+    pieData.push(categoryTotals[key]);
+  }
+  pieData.sort((left, right) => right.value - left.value);
+
+  const barData = recentDays.map((day) => ({
+    name: day.label,
+    amount: Number((dailyTotals[day.key] || 0).toFixed(2)),
+  }));
+  const plantMeta = getPlantMeta(checkinProgress.plantStage);
+  const progressPercent = getPlantProgressPercent(
+    checkinProgress.totalCount,
+    checkinProgress.nextStageAt
+  );
+
   return (
-    <main className="page-shell">
-      <Header session={session} onNavigate={onNavigate} onLogout={onLogout} />
+    <div className="shell">
+      <div className="screen">
+        <Header session={session} onLogout={onLogout} unreadCount={unreadCount} />
 
-      {error ? <div className="message-banner error">{error}</div> : null}
-      {notice ? <div className="message-banner success">{notice}</div> : null}
-      {busy ? <div className="message-banner info">{busy}</div> : null}
+        {error ? <div className="error-text" style={{ marginBottom: 12 }}>{error}</div> : null}
+        {feedback ? (
+          <div className="success-text" style={{ marginBottom: 12 }}>
+            {feedback}
+          </div>
+        ) : null}
+        {busyMessage ? (
+          <div className="section-note" style={{ marginBottom: 12 }}>
+            {busyMessage}
+          </div>
+        ) : null}
 
-      <nav className="tab-bar">
-        {TABS.map((tab) => (
+        {activeTab === "mood" ? (
+          <MoodTab
+            moodItems={moodItems}
+            latestReply={latestReply}
+            unreadCount={unreadCount}
+            customMoods={customMoods}
+            showCustomMoodPanel={showCustomMoodPanel}
+            setShowCustomMoodPanel={setShowCustomMoodPanel}
+            customMoodForm={customMoodForm}
+            setCustomMoodForm={setCustomMoodForm}
+            moodSubmitting={moodSubmitting}
+            onSubmitMood={submitMood}
+            onSubmitCustomMood={submitCustomMood}
+            onCreateCustomMood={createCustomMood}
+            onDeleteCustomMood={deleteCustomMood}
+          />
+        ) : null}
+
+        {activeTab === "wellness" ? (
+          <WellnessTab
+            tips={wellnessTips}
+            onRefreshTips={() => setWellnessTips(pickTipsBySeason())}
+            checkinProgress={checkinProgress}
+            checkinLoading={checkinLoading}
+            onSubmitCheckin={submitCheckin}
+            plantMeta={plantMeta}
+            progressPercent={progressPercent}
+          />
+        ) : null}
+
+        {activeTab === "expense" ? (
+          <Suspense fallback={<TabLoadingCard />}>
+            <ExpenseTab
+              categories={categories}
+              expenseForm={expenseForm}
+              setExpenseForm={setExpenseForm}
+              showCategoryPanel={showCategoryPanel}
+              setShowCategoryPanel={setShowCategoryPanel}
+              newCategory={newCategory}
+              setNewCategory={setNewCategory}
+              onCreateCategory={createCategory}
+              onDeleteCategory={deleteCategory}
+              onSubmitExpense={submitExpense}
+              expenseView={expenseView}
+              setExpenseView={setExpenseView}
+              expenseMonths={expenseMonths}
+              expandedMonths={expandedMonths}
+              toggleMonth={toggleMonth}
+              expandedCategories={expandedCategories}
+              toggleCategory={toggleCategory}
+              onDeleteExpense={deleteExpense}
+              totalExpenseAmount={totalExpenseAmount}
+              totalExpenseCount={totalExpenseCount}
+              pieData={pieData}
+              barData={barData}
+              colors={COLORS}
+            />
+          </Suspense>
+        ) : null}
+      </div>
+
+      <nav className="tabs-bar">
+        {NAV_ITEMS.map((item) => (
           <button
             type="button"
-            key={tab.key}
-            className={`tab-button ${activeTab === tab.key ? "is-active" : ""}`}
-            onClick={() => setActiveTab(tab.key)}
+            key={item.key}
+            className={`nav-button ${activeTab === item.key ? "active" : ""}`}
+            onClick={() => setActiveTab(item.key)}
           >
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
-            {tab.key === "mood" && unreadCount > 0 ? <span className="tab-badge">{unreadCount}</span> : null}
+            {item.key === "mood" && unreadCount > 0 ? (
+              <span className="tab-badge">{Math.min(unreadCount, 9)}</span>
+            ) : null}
+            <span className="icon">
+              <IllustrationIcon name={item.key} className="nav-illustration" />
+            </span>
+            <span>{item.label}</span>
+            {activeTab === item.key ? <span className="nav-dot" /> : null}
           </button>
         ))}
       </nav>
 
-      {activeTab === "mood" ? (
-        <MoodTab
-          moodItems={moodItems}
-          customMoods={customMoods}
-          latestReply={latestReply}
-          unreadCount={unreadCount}
-          onLogMood={logMood}
-          onAddCustomMood={addCustomMood}
-          onDeleteCustomMood={deleteCustomMood}
-          onMarkRepliesRead={markRepliesRead}
-        />
-      ) : null}
-
-      {activeTab === "wellness" ? (
-        <WellnessTab progress={checkinProgress} onCheckin={submitCheckin} loading={checkinLoading} />
-      ) : null}
-
-      {activeTab === "expense" ? (
-        <Suspense fallback={<TabLoadingCard />}>
-          <ExpenseTab
-            categories={categories}
-            months={expenseMonths}
-            onCreateCategory={createCategory}
-            onDeleteCategory={deleteCategory}
-            onAddExpense={addExpense}
-            onDeleteExpense={deleteExpense}
-          />
-        </Suspense>
-      ) : null}
-    </main>
+      {toastMood ? <MoodToast mood={toastMood} /> : null}
+    </div>
   );
 }

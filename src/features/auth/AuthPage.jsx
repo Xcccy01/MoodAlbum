@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "../../lib/api.js";
+import { APP_NAME } from "../../lib/constants.js";
+import { IllustrationIcon } from "../shared/IllustrationIcon.jsx";
 
 const LAST_USERNAME_KEY = "mood-album-last-username";
 
@@ -36,33 +38,37 @@ export function AuthPage({ onSuccess }) {
   }
 
   return (
-    <div className="screen-center">
-      <form className="surface-card auth-panel" onSubmit={submit}>
-        <div className="eyebrow">公开版</div>
-        <h1>创建你的家庭空间</h1>
-        <p className="muted-text">
-          注册后可以创建自己的家庭，邀请家人加入，再由家人回复彼此的心情记录。
+    <div className="login-shell">
+      <form className="login-card auth-card auth-panel" onSubmit={submit}>
+        <div className="auth-orb auth-orb-left" />
+        <div className="auth-orb auth-orb-right" />
+        <div className="section-note">{APP_NAME}</div>
+        <div className="meta-title" style={{ fontSize: 32, marginTop: 10 }}>
+          登录后开始记录今天
+        </div>
+        <p className="meta-subtitle auth-copy">
+          每个家庭的数据彼此隔离。登录后，回复端和记录端会按你的角色自动进入对应流程。
         </p>
 
-        <div className="segmented-control">
+        <div className="toggle-row auth-toggle">
           <button
             type="button"
-            className={mode === "login" ? "is-active" : ""}
+            className={`pill-button ${mode === "login" ? "active" : ""}`}
             onClick={() => setMode("login")}
           >
             登录
           </button>
           <button
             type="button"
-            className={mode === "register" ? "is-active" : ""}
+            className={`pill-button ${mode === "register" ? "active" : ""}`}
             onClick={() => setMode("register")}
           >
             注册
           </button>
         </div>
 
-        <label className="field-block">
-          <span>用户名</span>
+        <div className="field">
+          <label>用户名</label>
           <input
             className="text-input"
             value={form.username}
@@ -71,10 +77,10 @@ export function AuthPage({ onSuccess }) {
             autoComplete="username"
             data-testid="auth-username"
           />
-        </label>
+        </div>
 
-        <label className="field-block">
-          <span>密码</span>
+        <div className="field">
+          <label>密码</label>
           <input
             className="text-input"
             type="password"
@@ -84,12 +90,42 @@ export function AuthPage({ onSuccess }) {
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             data-testid="auth-password"
           />
-        </label>
+        </div>
 
-        {error ? <div className="message-banner error">{error}</div> : null}
+        <div className="auth-hint">
+          <span>
+            <IllustrationIcon name="clover" className="inline-art-icon" /> 家庭成员共享同一个家庭空间
+          </span>
+          <span>
+            <IllustrationIcon name="leaf" className="inline-art-icon" /> 回复权限由家庭角色控制
+          </span>
+        </div>
 
-        <button type="submit" className="primary-button" disabled={Boolean(busy)} data-testid="auth-submit">
-          {busy || (mode === "login" ? "登录并进入" : "创建账号并进入")}
+        {rememberedUsername ? (
+          <div className="remember-row">
+            <span className="section-note">上次登录账号：{rememberedUsername}</span>
+            {form.username !== rememberedUsername ? (
+              <button
+                type="button"
+                className="ghost-button remember-button"
+                onClick={() => setForm((prev) => ({ ...prev, username: rememberedUsername }))}
+              >
+                一键填入
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {error ? <div className="error-text">{error}</div> : null}
+        {busy ? <div className="section-note">{busy}</div> : null}
+        <button
+          type="submit"
+          className="primary-button"
+          style={{ width: "100%", marginTop: 8 }}
+          disabled={Boolean(busy)}
+          data-testid="auth-submit"
+        >
+          {mode === "login" ? "进入应用" : "创建账号并进入"}
         </button>
       </form>
     </div>

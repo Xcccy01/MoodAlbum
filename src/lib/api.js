@@ -14,8 +14,10 @@ export async function api(path, options = {}) {
     headers.set("Content-Type", "application/json");
   }
 
+  const method = String(options.method || "GET").toUpperCase();
   const response = await fetch(path, {
     credentials: "include",
+    cache: options.cache || (method === "GET" ? "no-store" : "default"),
     ...options,
     headers,
   });

@@ -1,7 +1,13 @@
-const CACHE_NAME = "moodalbum-shell-v2";
+const CACHE_NAME = "moodalbum-shell-v3";
 const APP_SHELL = ["/", "/index.html", "/manifest.json", "/icon-192.png", "/icon-512.png"];
+const IS_LOCAL_DEV = ["localhost", "127.0.0.1"].includes(self.location.hostname);
 
 self.addEventListener("install", (event) => {
+  if (IS_LOCAL_DEV) {
+    self.skipWaiting();
+    return;
+  }
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).catch(() => undefined)
   );
@@ -9,6 +15,16 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  if (IS_LOCAL_DEV) {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => self.registration.unregister())
+    );
+    return;
+  }
+
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
@@ -18,6 +34,10 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (IS_LOCAL_DEV) {
+    return;
+  }
+
   if (event.request.method !== "GET") {
     return;
   }
