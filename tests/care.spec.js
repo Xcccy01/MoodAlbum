@@ -14,6 +14,17 @@ async function createHousehold(page, name) {
   await expect(page.getByRole("heading", { name: /手动回复心情诉求/ })).toBeVisible();
 }
 
+async function createInvite(page, role) {
+  const codes = page.getByTestId("invite-code");
+  const previousCount = await codes.count();
+
+  await page.getByTestId("care-invite-role").selectOption(role);
+  await page.getByTestId("care-create-invite").click({ force: true });
+  await expect(codes).toHaveCount(previousCount + 1);
+
+  return ((await codes.first().textContent()) || "").trim();
+}
+
 async function logout(page) {
   await page.getByRole("button", { name: "退出登录" }).click();
   await expect(page.getByTestId("auth-username")).toBeVisible();
@@ -25,15 +36,8 @@ test("家人回复端可以邀请、加入并回复成员心情", async ({ page 
   await register(page, "/care", `o_${stamp}`, "secret123");
   await createHousehold(page, `家庭_${stamp}`);
 
-  await page.getByTestId("care-invite-role").selectOption("member");
-  await page.getByTestId("care-create-invite").click({ force: true });
-  await expect(page.getByTestId("invite-code").first()).toBeVisible();
-  const memberCode = (await page.getByTestId("invite-code").first().textContent())?.trim();
-
-  await page.getByTestId("care-invite-role").selectOption("caregiver");
-  await page.getByTestId("care-create-invite").click({ force: true });
-  await expect(page.getByTestId("invite-code").first()).toBeVisible();
-  const caregiverCode = (await page.getByTestId("invite-code").first().textContent())?.trim();
+  const memberCode = await createInvite(page, "member");
+  const caregiverCode = await createInvite(page, "caregiver");
 
   await logout(page);
 
@@ -73,15 +77,8 @@ test("不同家庭之间的回复端数据隔离", async ({ page }) => {
   await register(page, "/care", `owner_a_${stamp}`, "secret123");
   await createHousehold(page, `家庭A_${stamp}`);
 
-  await page.getByTestId("care-invite-role").selectOption("member");
-  await page.getByTestId("care-create-invite").click({ force: true });
-  await expect(page.getByTestId("invite-code").first()).toBeVisible();
-  const memberCode = (await page.getByTestId("invite-code").first().textContent())?.trim();
-
-  await page.getByTestId("care-invite-role").selectOption("caregiver");
-  await page.getByTestId("care-create-invite").click({ force: true });
-  await expect(page.getByTestId("invite-code").first()).toBeVisible();
-  const caregiverACode = (await page.getByTestId("invite-code").first().textContent())?.trim();
+  const memberCode = await createInvite(page, "member");
+  const caregiverACode = await createInvite(page, "caregiver");
 
   await logout(page);
 
@@ -93,10 +90,7 @@ test("不同家庭之间的回复端数据隔离", async ({ page }) => {
 
   await register(page, "/care", `owner_b_${stamp}`, "secret123");
   await createHousehold(page, `家庭B_${stamp}`);
-  await page.getByTestId("care-invite-role").selectOption("caregiver");
-  await page.getByTestId("care-create-invite").click({ force: true });
-  await expect(page.getByTestId("invite-code").first()).toBeVisible();
-  const caregiverBCode = (await page.getByTestId("invite-code").first().textContent())?.trim();
+  const caregiverBCode = await createInvite(page, "caregiver");
   await logout(page);
 
   await register(page, "/care", `care_b_${stamp}`, "secret123");

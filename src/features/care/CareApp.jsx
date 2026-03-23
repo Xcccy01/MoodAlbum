@@ -261,96 +261,6 @@ export function CareApp({ session, onLogout, onRequestError }) {
         </select>
       </div>
 
-      <article className="admin-card" style={{ marginBottom: 16 }}>
-        <div className="section-title">
-          <h3>家庭成员与邀请</h3>
-          <span className="section-note">
-            {session.household.name} · {members.length} 位成员
-          </span>
-        </div>
-
-        <div className="care-summary-grid">
-          {members.length ? (
-            members.map((member) => (
-              <div className="care-summary-item" key={member.userId}>
-                <div style={{ fontWeight: 800 }}>{member.displayName}</div>
-                <div className="meta-subtitle" style={{ marginTop: 6 }}>
-                  {getRoleLabel(member.role)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-card">当前还没有家庭成员。</div>
-          )}
-        </div>
-
-        {session.capabilities.canManageInvites ? (
-          <>
-            <div className="divider" style={{ marginTop: 18 }}>
-              <span>邀请码管理</span>
-            </div>
-            <div className="button-row care-invite-row" style={{ marginBottom: 16 }}>
-              <select
-                className="text-input select-input"
-                value={inviteRole}
-                onChange={(event) => setInviteRole(event.target.value)}
-                data-testid="care-invite-role"
-              >
-                <option value="member">普通成员</option>
-                <option value="caregiver">回复者</option>
-              </select>
-              <button
-                type="button"
-                className="primary-button"
-                onClick={createInvite}
-                data-testid="care-create-invite"
-              >
-                生成邀请码
-              </button>
-            </div>
-
-            <div className="reply-stack">
-              {invites.length ? (
-                invites.map((invite) => (
-                  <div className="reply-item" key={invite.id}>
-                    <div className="row-between" style={{ alignItems: "flex-start" }}>
-                      <div>
-                        <div style={{ fontWeight: 800 }} data-testid="invite-code">
-                          {invite.code}
-                        </div>
-                        <div className="meta-subtitle" style={{ marginTop: 6 }}>
-                          {getRoleLabel(invite.role)} · 截止 {formatDateTime(invite.expiresAt)}
-                        </div>
-                      </div>
-                      <div className="button-row" style={{ gap: 8 }}>
-                        <span
-                          className={`status-pill ${
-                            invite.status === "active" ? "replied" : "ignored"
-                          }`}
-                        >
-                          {invite.status === "active" ? "有效" : "已撤销"}
-                        </span>
-                        {invite.status === "active" ? (
-                          <button
-                            type="button"
-                            className="ghost-button"
-                            onClick={() => revokeInvite(invite.id)}
-                          >
-                            撤销
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-card">还没有邀请码，先生成一个给家人。</div>
-              )}
-            </div>
-          </>
-        ) : null}
-      </article>
-
       <div className="admin-card" style={{ marginBottom: 16 }}>
         <div className="section-title">
           <h3>心情列表</h3>
@@ -499,6 +409,96 @@ export function CareApp({ session, onLogout, onRequestError }) {
       ) : moods.length > 0 ? (
         <div className="empty-card">点击上方的心情记录，查看详情并回复。</div>
       ) : null}
+
+      <article className="admin-card" style={{ marginBottom: 16 }}>
+        <div className="section-title">
+          <h3>家庭成员与邀请</h3>
+          <span className="section-note">
+            {session.household.name} · {members.length} 位成员
+          </span>
+        </div>
+
+        <div className="care-summary-grid">
+          {members.length ? (
+            members.map((member) => (
+              <div className="care-summary-item" key={member.userId}>
+                <div style={{ fontWeight: 800 }}>{member.displayName}</div>
+                <div className="meta-subtitle" style={{ marginTop: 6 }}>
+                  {getRoleLabel(member.role)}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-card">当前还没有家庭成员。</div>
+          )}
+        </div>
+
+        {session.capabilities.canManageInvites ? (
+          <>
+            <div className="divider" style={{ marginTop: 18 }}>
+              <span>邀请码管理</span>
+            </div>
+            <div className="button-row care-invite-row" style={{ marginBottom: 16 }}>
+              <select
+                className="text-input select-input"
+                value={inviteRole}
+                onChange={(event) => setInviteRole(event.target.value)}
+                data-testid="care-invite-role"
+              >
+                <option value="member">普通成员</option>
+                <option value="caregiver">回复者</option>
+              </select>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={createInvite}
+                data-testid="care-create-invite"
+              >
+                生成邀请码
+              </button>
+            </div>
+
+            <div className="reply-stack">
+              {invites.length ? (
+                invites.map((invite) => (
+                  <div className="reply-item" key={invite.id}>
+                    <div className="row-between" style={{ alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontWeight: 800 }} data-testid="invite-code">
+                          {invite.code}
+                        </div>
+                        <div className="meta-subtitle" style={{ marginTop: 6 }}>
+                          {getRoleLabel(invite.role)} · 截止 {formatDateTime(invite.expiresAt)}
+                        </div>
+                      </div>
+                      <div className="button-row" style={{ gap: 8 }}>
+                        <span
+                          className={`status-pill ${
+                            invite.status === "active" ? "replied" : "ignored"
+                          }`}
+                        >
+                          {invite.status === "active" ? "有效" : "已撤销"}
+                        </span>
+                        {invite.status === "active" ? (
+                          <button
+                            type="button"
+                            className="ghost-button"
+                            onClick={() => revokeInvite(invite.id)}
+                          >
+                            撤销
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-card">还没有邀请码，先生成一个给家人。</div>
+              )}
+            </div>
+          </>
+        ) : null}
+      </article>
     </div>
   );
 }
