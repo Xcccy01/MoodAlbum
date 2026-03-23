@@ -3,6 +3,7 @@ import http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import autocannon from "autocannon";
+import { USER_COOKIE } from "../server/config/constants.js";
 
 const baseUrl = process.env.BASE_URL || "http://127.0.0.1:8790";
 const outputDir = path.resolve("test-artifacts");
@@ -72,12 +73,20 @@ async function getSessionCookie() {
 
   const setCookieHeader = register.response.headers["set-cookie"];
   const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
-  const setCookie = cookies.find((item) => item?.startsWith("family_user_session="));
+  const setCookie = cookies.find((item) => item?.startsWith(`${USER_COOKIE}=`));
   if (!setCookie) {
     throw new Error("注册后没有收到会话 Cookie。");
   }
 
   return setCookie.split(";")[0];
+}
+
+async function createHousehold(cookie) {
+  await request(`${baseUrl}/api/households`, {
+    method: "POST",
+    headers: { Cookie: cookie },
+    body: JSON.stringify({ name: `${username}的家庭` }),
+  });
 }
 
 function runScenario(title, options) {
@@ -101,7 +110,16 @@ function runScenario(title, options) {
   });
 }
 
+function assertHealthyScenario(result) {
+  if (result.errors || result.timeouts || result.non2xx) {
+    throw new Error(
+      `${result.title} 压测失败：errors=${result.errors}, timeouts=${result.timeouts}, non2xx=${result.non2xx}`
+    );
+  }
+}
+
 const cookie = await getSessionCookie();
+await createHousehold(cookie);
 
 await request(`${baseUrl}/api/moods`, {
   method: "POST",
@@ -119,20 +137,20 @@ const scenarios = [
   await runScenario("GET /api/moods?limit=8", {
     url: `${baseUrl}/api/moods?limit=8`,
     connections: 12,
-    duration: 8,
+    amount: 180,
     headers: { Cookie: cookie },
   }),
   await runScenario("GET /api/expenses/grouped", {
     url: `${baseUrl}/api/expenses/grouped`,
     connections: 12,
-    duration: 8,
+    amount: 180,
     headers: { Cookie: cookie },
   }),
   await runScenario("POST /api/moods", {
     url: `${baseUrl}/api/moods`,
     method: "POST",
     connections: 6,
-    duration: 8,
+    amount: 120,
     headers: {
       Cookie: cookie,
       "Content-Type": "application/json",
@@ -147,6 +165,10 @@ const summary = {
   executedAt: new Date().toISOString(),
   scenarios,
 };
+
+for (const scenario of scenarios) {
+  assertHealthyScenario(scenario);
+}
 
 fs.writeFileSync(path.join(outputDir, "load-test-summary.json"), JSON.stringify(summary, null, 2));
 console.log(JSON.stringify(summary, null, 2));

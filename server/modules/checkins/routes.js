@@ -1,7 +1,14 @@
 import express from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { randomId } from "../../lib/security.js";
-import { getChinaDateString, getNextPlantStage, getPlantStage, nowIso, toDayNumber } from "../../lib/time.js";
+import {
+  getChinaDateString,
+  getNextPlantStage,
+  getPlantStage,
+  normalizeDateOnly,
+  nowIso,
+  toDayNumber,
+} from "../../lib/time.js";
 import { requireHousehold } from "../../middleware/require-auth.js";
 
 async function getCheckinProgress(database, householdId, userId) {
@@ -30,18 +37,19 @@ async function getCheckinProgress(database, householdId, userId) {
   );
 
   const latest = latestResult.rows[0];
+  const latestDate = normalizeDateOnly(latest?.checkin_date);
   const totalCount = Number(latest?.total_count || 0);
   const stage = getPlantStage(Math.max(totalCount, 1));
   const nextStage = getNextPlantStage(totalCount);
 
   return {
-    checkedInToday: latest?.checkin_date === today,
+    checkedInToday: latestDate === today,
     streakCount: Number(latest?.streak_count || 0),
     totalCount,
     plantStage: totalCount === 0 ? "种子" : latest.plant_stage || stage.stage,
     plantEmoji: totalCount === 0 ? "🌰" : stage.emoji,
     nextStageAt: nextStage?.threshold || null,
-    recentDates: recentResult.rows.map((row) => row.checkin_date),
+    recentDates: recentResult.rows.map((row) => normalizeDateOnly(row.checkin_date)),
   };
 }
 
@@ -90,7 +98,7 @@ export function createCheckinsRouter({ database }) {
       );
 
       const latest = latestResult.rows[0];
-      const previousDayNumber = latest ? toDayNumber(latest.checkin_date) : null;
+      const previousDayNumber = latest ? toDayNumber(normalizeDateOnly(latest.checkin_date)) : null;
       const todayDayNumber = toDayNumber(today);
       const streakCount =
         latest && previousDayNumber !== null && todayDayNumber - previousDayNumber === 1

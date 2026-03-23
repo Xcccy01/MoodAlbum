@@ -67,6 +67,10 @@ function navigateTo(path) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
+function getClientFromPath(pathname) {
+  return pathname === "/care" ? "care" : "member";
+}
+
 function buildCapabilities(membership) {
   return {
     canAccessCare: Boolean(membership && ["owner", "caregiver"].includes(membership.role)),
@@ -138,6 +142,11 @@ export default function AppRoot() {
       return refreshSession();
     }
 
+    const nextPath =
+      pathname === "/care" && ["owner", "caregiver"].includes(payload.membership.role)
+        ? "/care"
+        : "/";
+
     setSession((prev) => ({
       ...prev,
       checking: false,
@@ -145,7 +154,7 @@ export default function AppRoot() {
       membership: payload.membership,
       capabilities: buildCapabilities(payload.membership),
     }));
-    navigateTo("/");
+    navigateTo(nextPath);
     return Promise.resolve();
   }
 
@@ -181,7 +190,11 @@ export default function AppRoot() {
   if (!session.authenticated) {
     return (
       <Suspense fallback={<LoadingScreen text="正在载入登录入口" />}>
-        <AuthPage onSuccess={refreshSession} />
+        <AuthPage
+          onSuccess={refreshSession}
+          client={getClientFromPath(pathname)}
+          onSwitchClient={() => navigateTo(pathname === "/care" ? "/" : "/care")}
+        />
       </Suspense>
     );
   }
@@ -189,7 +202,13 @@ export default function AppRoot() {
   if (!session.household) {
     return (
       <Suspense fallback={<LoadingScreen text="正在载入家庭向导" />}>
-        <OnboardingPage session={session} onSuccess={handleOnboardingSuccess} onLogout={logout} />
+        <OnboardingPage
+          session={session}
+          onSuccess={handleOnboardingSuccess}
+          onLogout={logout}
+          client={getClientFromPath(pathname)}
+          onSwitchClient={() => navigateTo(pathname === "/care" ? "/" : "/care")}
+        />
       </Suspense>
     );
   }

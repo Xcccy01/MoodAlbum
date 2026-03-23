@@ -1,4 +1,4 @@
-import { getCurrentSeason } from "../../lib/ui.js";
+import { getCurrentSeason, toChinaDateKey } from "../../lib/ui.js";
 import { getPlantArtName, IllustrationIcon, pickFromList } from "../shared/IllustrationIcon.jsx";
 
 export function WellnessTab({
@@ -9,6 +9,7 @@ export function WellnessTab({
   onSubmitCheckin,
   plantMeta,
   progressPercent,
+  notice,
 }) {
   const season = getCurrentSeason();
   const recentDateSet = new Set(checkinProgress.recentDates || []);
@@ -17,7 +18,7 @@ export function WellnessTab({
   for (let offset = 6; offset >= 0; offset -= 1) {
     const date = new Date();
     date.setDate(date.getDate() - offset);
-    recentDays.push(date.toISOString().slice(0, 10));
+    recentDays.push(toChinaDateKey(date));
   }
 
   return (
@@ -81,16 +82,21 @@ export function WellnessTab({
             type="button"
             className="primary-button"
             onClick={onSubmitCheckin}
-            disabled={checkinProgress.checkedInToday || checkinLoading}
+            disabled={checkinLoading}
             data-testid="checkin-button"
           >
-            {checkinProgress.checkedInToday
-              ? "今天已经打卡"
-              : checkinLoading
-                ? "记录中..."
+            {checkinLoading
+              ? "记录中..."
+              : checkinProgress.checkedInToday
+                ? "今天已经打卡"
                 : "今天来打卡"}
           </button>
         </div>
+        {notice?.message ? (
+          <div className={notice.tone === "error" ? "error-text" : "success-text"} style={{ marginTop: 12 }}>
+            {notice.message}
+          </div>
+        ) : null}
       </section>
 
       <section className="section-title">

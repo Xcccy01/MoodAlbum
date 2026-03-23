@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-async function register(page, username, password) {
-  await page.goto("/");
+async function register(page, path, username, password) {
+  await page.goto(path);
   await page.getByTestId("auth-username").fill(username);
   await page.getByTestId("auth-password").fill(password);
   await page.getByRole("button", { name: "注册" }).click();
@@ -15,8 +15,18 @@ async function createHousehold(page, name) {
 
 test("公开版成员主链路可用", async ({ page }) => {
   const stamp = Date.now().toString(36);
-  await register(page, `member_${stamp}`, "secret123");
+  await register(page, "/care", `owner_${stamp}`, "secret123");
   await createHousehold(page, `家庭_${stamp}`);
+  await page.goto("/care");
+  await page.getByTestId("care-invite-role").selectOption("member");
+  await page.getByTestId("care-create-invite").click({ force: true });
+  await expect(page.getByText("邀请码已生成。")).toBeVisible();
+  const memberCode = (await page.getByTestId("invite-code").first().textContent())?.trim();
+
+  await page.getByRole("button", { name: "退出登录" }).click();
+  await register(page, "/", `member_${stamp}`, "secret123");
+  await page.getByTestId("join-household-code").fill(memberCode || "");
+  await page.getByTestId("join-household-submit").click();
 
   await expect(page.getByRole("heading", { name: /早上好呀/ })).toBeVisible();
 

@@ -5,7 +5,25 @@ import { IllustrationIcon } from "../shared/IllustrationIcon.jsx";
 
 const LAST_USERNAME_KEY = "mood-album-last-username";
 
-export function AuthPage({ onSuccess }) {
+const CLIENT_CONTENT = {
+  member: {
+    title: "登录后开始记录今天",
+    subtitle: "这里是发送心情端。加入家庭后，你可以记录心情、打卡和记账。",
+    hintPrimary: "家庭成员通过邀请码进入自己的家庭空间",
+    hintSecondary: "创建家庭和家人回复请前往家庭回复端",
+    switchLabel: "去家庭创建与回复端",
+  },
+  care: {
+    title: "进入家庭创建与回复端",
+    subtitle: "这里负责创建家庭、生成邀请码和回复成员心情。",
+    hintPrimary: "家庭管理员可以在这里创建家庭并邀请成员",
+    hintSecondary: "普通成员记录心情请前往发送心情端",
+    switchLabel: "去发送心情端",
+  },
+};
+
+export function AuthPage({ onSuccess, client = "member", onSwitchClient }) {
+  const content = CLIENT_CONTENT[client] || CLIENT_CONTENT.member;
   const rememberedUsername = useMemo(
     () => window.localStorage.getItem(LAST_USERNAME_KEY) || "",
     []
@@ -44,10 +62,10 @@ export function AuthPage({ onSuccess }) {
         <div className="auth-orb auth-orb-right" />
         <div className="section-note">{APP_NAME}</div>
         <div className="meta-title" style={{ fontSize: 32, marginTop: 10 }}>
-          登录后开始记录今天
+          {content.title}
         </div>
         <p className="meta-subtitle auth-copy">
-          每个家庭的数据彼此隔离。登录后，回复端和记录端会按你的角色自动进入对应流程。
+          {content.subtitle}
         </p>
 
         <div className="toggle-row auth-toggle">
@@ -94,10 +112,10 @@ export function AuthPage({ onSuccess }) {
 
         <div className="auth-hint">
           <span>
-            <IllustrationIcon name="clover" className="inline-art-icon" /> 家庭成员共享同一个家庭空间
+            <IllustrationIcon name="clover" className="inline-art-icon" /> {content.hintPrimary}
           </span>
           <span>
-            <IllustrationIcon name="leaf" className="inline-art-icon" /> 回复权限由家庭角色控制
+            <IllustrationIcon name="leaf" className="inline-art-icon" /> {content.hintSecondary}
           </span>
         </div>
 
@@ -126,6 +144,14 @@ export function AuthPage({ onSuccess }) {
           data-testid="auth-submit"
         >
           {mode === "login" ? "进入应用" : "创建账号并进入"}
+        </button>
+        <button
+          type="button"
+          className="ghost-button"
+          style={{ width: "100%", marginTop: 10 }}
+          onClick={onSwitchClient}
+        >
+          {content.switchLabel}
         </button>
       </form>
     </div>

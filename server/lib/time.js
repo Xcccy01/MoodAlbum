@@ -23,8 +23,22 @@ export function getChinaDateString(date = new Date()) {
 }
 
 export function toDayNumber(dateString) {
-  const [year, month, day] = dateString.split("-").map(Number);
+  const normalized = normalizeDateOnly(dateString);
+  const [year, month, day] = normalized.split("-").map(Number);
   return Date.UTC(year, month - 1, day) / 86400000;
+}
+
+export function normalizeDateOnly(value) {
+  if (!value) {
+    return "";
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  const text = String(value);
+  return text.includes("T") ? text.slice(0, 10) : text;
 }
 
 export function getPlantStage(totalCount) {

@@ -38,6 +38,8 @@ export function ExpenseTab({
   pieData,
   barData,
   colors,
+  expenseSubmitting,
+  notice,
 }) {
   return (
     <>
@@ -162,9 +164,15 @@ export function ExpenseTab({
           className="primary-button"
           style={{ width: "100%" }}
           data-testid="expense-submit"
+          disabled={expenseSubmitting}
         >
-          记下来
+          {expenseSubmitting ? "记录中..." : "记下来"}
         </button>
+        {notice?.message ? (
+          <div className={notice.tone === "error" ? "error-text" : "success-text"} style={{ marginTop: 12 }}>
+            {notice.message}
+          </div>
+        ) : null}
       </form>
 
       <div className="toggle-row" style={{ margin: "16px 0 14px" }}>

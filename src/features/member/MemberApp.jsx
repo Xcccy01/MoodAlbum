@@ -110,6 +110,7 @@ export function MemberApp({ session, onLogout, onRequestError }) {
     recentDates: [],
   });
   const [checkinLoading, setCheckinLoading] = useState(false);
+  const [expenseSubmitting, setExpenseSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
   const [expenseMonths, setExpenseMonths] = useState([]);
   const [expenseView, setExpenseView] = useState("detail");
@@ -124,6 +125,8 @@ export function MemberApp({ session, onLogout, onRequestError }) {
   const [busyMessage, setBusyMessage] = useState("");
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
+  const [checkinNotice, setCheckinNotice] = useState({ tone: "", message: "" });
+  const [expenseNotice, setExpenseNotice] = useState({ tone: "", message: "" });
   const currentMonthKey = getMonthKey(new Date());
 
   const unreadReplyIds = useMemo(
@@ -292,14 +295,22 @@ export function MemberApp({ session, onLogout, onRequestError }) {
   }
 
   async function submitCheckin() {
+    if (checkinProgress.checkedInToday) {
+      setCheckinNotice({ tone: "success", message: "今天已经打卡。" });
+      setError("");
+      return;
+    }
+
     setCheckinLoading(true);
     setError("");
     setFeedback("");
+    setCheckinNotice({ tone: "", message: "" });
     try {
       const result = await api("/api/checkins", { method: "POST" });
-      setFeedback("今天已经打卡。");
+      setCheckinNotice({ tone: "success", message: "今天已经打卡。" });
       setCheckinProgress(result);
     } catch (requestError) {
+      setCheckinNotice({ tone: "error", message: requestError.message });
       handleRequestError(requestError, onRequestError, setError);
     } finally {
       setCheckinLoading(false);
@@ -309,20 +320,24 @@ export function MemberApp({ session, onLogout, onRequestError }) {
   async function submitExpense(event) {
     event.preventDefault();
     setBusyMessage("正在记下来...");
+    setExpenseSubmitting(true);
     setError("");
     setFeedback("");
+    setExpenseNotice({ tone: "", message: "" });
     try {
       const result = await api("/api/expenses", {
         method: "POST",
         body: JSON.stringify(expenseForm),
       });
       setExpenseForm((prev) => ({ ...prev, amount: "", note: "" }));
-      setFeedback("账目已记录。");
+      setExpenseNotice({ tone: "success", message: "账目已记录。" });
       setExpenseMonths(result.months || []);
     } catch (requestError) {
+      setExpenseNotice({ tone: "error", message: requestError.message });
       handleRequestError(requestError, onRequestError, setError);
     } finally {
       setBusyMessage("");
+      setExpenseSubmitting(false);
     }
   }
 
@@ -535,6 +550,7 @@ export function MemberApp({ session, onLogout, onRequestError }) {
             onSubmitCheckin={submitCheckin}
             plantMeta={plantMeta}
             progressPercent={progressPercent}
+            notice={checkinNotice}
           />
         ) : null}
 
@@ -564,6 +580,8 @@ export function MemberApp({ session, onLogout, onRequestError }) {
               pieData={pieData}
               barData={barData}
               colors={COLORS}
+              expenseSubmitting={expenseSubmitting}
+              notice={expenseNotice}
             />
           </Suspense>
         ) : null}

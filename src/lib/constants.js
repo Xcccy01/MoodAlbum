@@ -1,4 +1,5 @@
 export const APP_NAME = "MoodAlbum";
+export const APP_TIME_ZONE = "Asia/Shanghai";
 
 export const COLORS = {
   primary: "#6BAF7B",

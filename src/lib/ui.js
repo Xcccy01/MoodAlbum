@@ -1,4 +1,4 @@
-import { COLORS, PLANT_STAGE_META, WELLNESS_TIPS } from "./constants.js";
+import { APP_TIME_ZONE, COLORS, PLANT_STAGE_META, WELLNESS_TIPS } from "./constants.js";
 
 const PLANT_THRESHOLDS = [
   { threshold: 1, stage: "种子" },
@@ -63,6 +63,24 @@ export function getMonthKey(date) {
 
 export function toDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+export function toChinaDateKey(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const values = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
+
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 export function getMemberReplyState(mood) {
