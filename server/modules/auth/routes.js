@@ -1,7 +1,15 @@
 import express from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { authRateLimit } from "../../middleware/rate-limit.js";
-import { applySessionCookie, clearSessionCookie, createSessionValue, hashPassword, randomId, verifyPassword } from "../../lib/security.js";
+import {
+  applySessionCookie,
+  clearSessionCookie,
+  createSessionValue,
+  hashPassword,
+  randomId,
+  shouldUseSecureCookies,
+  verifyPassword,
+} from "../../lib/security.js";
 import { nowIso } from "../../lib/time.js";
 
 function normalizeUsername(rawValue) {
@@ -80,7 +88,11 @@ export function createAuthRouter({ config, database }) {
         [userId, username, hashPassword(password), nowIso()]
       );
 
-      applySessionCookie(res, createSessionValue(userId, config.sessionSecret), config.secureCookies);
+      applySessionCookie(
+        res,
+        createSessionValue(userId, config.sessionSecret),
+        shouldUseSecureCookies(req, config.secureCookies)
+      );
       res.status(201).json({
         authenticated: true,
         user: { id: userId, username },
@@ -115,7 +127,11 @@ export function createAuthRouter({ config, database }) {
         return;
       }
 
-      applySessionCookie(res, createSessionValue(user.id, config.sessionSecret), config.secureCookies);
+      applySessionCookie(
+        res,
+        createSessionValue(user.id, config.sessionSecret),
+        shouldUseSecureCookies(req, config.secureCookies)
+      );
       res.json({
         authenticated: true,
         user: { id: user.id, username: user.username },
@@ -123,8 +139,8 @@ export function createAuthRouter({ config, database }) {
     })
   );
 
-  router.post("/logout", (_req, res) => {
-    clearSessionCookie(res, config.secureCookies);
+  router.post("/logout", (req, res) => {
+    clearSessionCookie(res, shouldUseSecureCookies(req, config.secureCookies));
     res.json({ ok: true });
   });
 

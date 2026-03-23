@@ -84,6 +84,22 @@ export function buildClearCookie(name, secure = false) {
   return buildSetCookie(name, "", 0, secure);
 }
 
+export function shouldUseSecureCookies(req, secureCookies) {
+  if (secureCookies === true) {
+    return true;
+  }
+  if (secureCookies === false) {
+    return false;
+  }
+
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
+  return req.secure || forwardedProto === "https";
+}
+
 export function applySessionCookie(res, sessionValue, secure) {
   res.append("Set-Cookie", buildSetCookie(USER_COOKIE, sessionValue, USER_SESSION_SECONDS, secure));
 }

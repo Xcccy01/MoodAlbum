@@ -21,13 +21,24 @@ export function createConfig({ preferMigrationUrl = false } = {}) {
     port: Number(process.env.PORT || 8787),
     databaseUrl,
     sessionSecret,
-    secureCookies: nodeEnv === "production",
+    secureCookies: resolveSecureCookiesMode(process.env.SECURE_COOKIES, nodeEnv),
     platformAdminSecret: process.env.PLATFORM_ADMIN_SECRET || "",
     runMigrationsOnBoot: process.env.RUN_MIGRATIONS !== "false",
   };
 
   validateConfig(config);
   return config;
+}
+
+function resolveSecureCookiesMode(rawValue, nodeEnv) {
+  const normalized = String(rawValue || "").trim().toLowerCase();
+  if (normalized === "true") {
+    return true;
+  }
+  if (normalized === "false") {
+    return false;
+  }
+  return nodeEnv === "production" ? "auto" : false;
 }
 
 export function loadEnvFile(filePath) {
