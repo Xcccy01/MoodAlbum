@@ -203,7 +203,6 @@ export default function AppRoot() {
       <Suspense fallback={<LoadingScreen text="正在载入家人回复端" />}>
         <CareApp
           session={session}
-          onNavigate={navigateTo}
           onLogout={logout}
           onRequestError={handleRequestError}
         />
@@ -215,7 +214,6 @@ export default function AppRoot() {
     <Suspense fallback={<LoadingScreen text="正在载入家庭主页" />}>
       <MemberApp
         session={session}
-        onNavigate={navigateTo}
         onLogout={logout}
         onRequestError={handleRequestError}
       />

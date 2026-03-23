@@ -386,7 +386,7 @@ button {
 }
 
 .admin-list {
-  max-height: min(72vh, 920px);
+  max-height: min(50vh, 480px);
   overflow: auto;
   padding-right: 4px;
 }
@@ -979,20 +979,11 @@ button {
 }
 
 .admin-shell {
-  max-width: 1080px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 24px 16px 32px;
-}
-
-.admin-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.admin-grid.layout {
-  grid-template-columns: 320px minmax(0, 1fr);
-  align-items: start;
+  padding: 16px 14px 32px;
+  overflow-x: clip;
 }
 
 .admin-list-item {
@@ -1062,21 +1053,9 @@ button {
   font-size: 14px;
 }
 
-@media (max-width: 840px) {
-  .admin-grid.layout {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-grid.layout > aside {
-    order: 2;
-  }
-
-  .admin-grid.layout > section {
-    order: 1;
-  }
-
-  .admin-list {
-    max-height: 42vh;
+@media (max-width: 480px) {
+  .admin-header-card .greeting-row h1 {
+    font-size: 22px;
   }
 }
 

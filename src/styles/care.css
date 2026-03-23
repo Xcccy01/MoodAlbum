@@ -48,3 +48,23 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .care-toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .care-toolbar .select-input {
+    width: 100%;
+  }
+
+  .care-invite-row {
+    flex-direction: column;
+  }
+
+  .care-invite-row .select-input,
+  .care-invite-row .primary-button {
+    width: 100%;
+  }
+}

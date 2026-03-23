@@ -7,7 +7,7 @@
     "node": ">=22.5.0"
   },
   "scripts": {
-    "dev": "concurrently \"node server/index.js\" \"vite\"",
+    "dev": "concurrently \"PORT=8787 node server/index.js\" \"vite\"",
     "build": "vite build",
     "start": "node server/index.js",
     "db:migrate": "node scripts/run-migrations.mjs",

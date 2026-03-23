@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
+import { rateLimit } from "./middleware/rate-limit.js";
 import { attachRequestContext } from "./middleware/request-context.js";
 import { errorHandler, notFoundHandler } from "./middleware/require-auth.js";
 import { createAppUpdatesRouter } from "./modules/app-updates/routes.js";
@@ -22,6 +23,7 @@ export function createApp({ config, database }) {
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
+  app.use("/api", rateLimit({ windowMs: 60_000, max: config.isProduction ? 60 : 600 }));
   app.use(attachRequestContext({ config, database }));
 
   app.get("/api/health", async (_req, res) => {

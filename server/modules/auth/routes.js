@@ -1,5 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
+import { authRateLimit } from "../../middleware/rate-limit.js";
 import { applySessionCookie, clearSessionCookie, createSessionValue, hashPassword, randomId, verifyPassword } from "../../lib/security.js";
 import { nowIso } from "../../lib/time.js";
 
@@ -31,6 +32,8 @@ function buildAuthPayload(context) {
 export function createAuthRouter({ config, database }) {
   const router = express.Router();
 
+  const loginLimit = authRateLimit({ windowMs: 60_000, max: config.isProduction ? 10 : 200 });
+
   router.get(
     "/session",
     asyncHandler(async (req, res) => {
@@ -47,6 +50,7 @@ export function createAuthRouter({ config, database }) {
 
   router.post(
     "/register",
+    loginLimit,
     asyncHandler(async (req, res) => {
       const username = normalizeUsername(req.body?.username);
       const password = String(req.body?.password || "");
@@ -92,6 +96,7 @@ export function createAuthRouter({ config, database }) {
 
   router.post(
     "/login",
+    loginLimit,
     asyncHandler(async (req, res) => {
       const username = normalizeUsername(req.body?.username);
       const password = String(req.body?.password || "");
