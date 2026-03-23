@@ -1,7 +1,7 @@
 import { createConfig } from "../server/config/env.js";
 import { createDatabase } from "../server/db/client.js";
 
-const REQUIRED_PRIVILEGES = {
+const BASE_REQUIRED_PRIVILEGES = {
   users: ["SELECT", "INSERT"],
   households: ["SELECT", "INSERT"],
   household_members: ["SELECT", "INSERT"],
@@ -12,11 +12,26 @@ const REQUIRED_PRIVILEGES = {
   custom_categories: ["SELECT", "INSERT", "UPDATE"],
   expenses: ["SELECT", "INSERT", "DELETE"],
   checkins: ["SELECT", "INSERT"],
-  app_updates: ["SELECT", "INSERT", "UPDATE"],
+  app_updates: ["SELECT"],
 };
+
+function getRequiredPrivileges(config) {
+  if (!config.platformAdminSecret) {
+    return BASE_REQUIRED_PRIVILEGES;
+  }
+
+  return {
+    ...BASE_REQUIRED_PRIVILEGES,
+    app_updates: ["SELECT", "INSERT", "UPDATE"],
+  };
+}
 
 async function main() {
   const config = createConfig();
+
+  if (!config.isProduction) {
+    throw new Error("生产环境自检要求在 NODE_ENV=production 下执行。");
+  }
 
   if (!config.databaseUrl) {
     throw new Error("生产环境自检要求 DATABASE_URL 指向真实 PostgreSQL。");
@@ -72,7 +87,7 @@ async function main() {
     failures.push("生产环境建议将 RUN_MIGRATIONS 设为 false，并改为部署前显式执行 npm run db:migrate。");
   }
 
-  for (const [tableName, privileges] of Object.entries(REQUIRED_PRIVILEGES)) {
+  for (const [tableName, privileges] of Object.entries(getRequiredPrivileges(config))) {
     for (const privilege of privileges) {
       const result = await database.query(
         "SELECT has_table_privilege(current_user, $1, $2) AS allowed",

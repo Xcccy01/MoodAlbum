@@ -20,4 +20,8 @@ GRANT SELECT, INSERT, UPDATE ON TABLE custom_moods TO moodalbum_runtime;
 GRANT SELECT, INSERT, UPDATE ON TABLE custom_categories TO moodalbum_runtime;
 GRANT SELECT, INSERT, DELETE ON TABLE expenses TO moodalbum_runtime;
 GRANT SELECT, INSERT ON TABLE checkins TO moodalbum_runtime;
-GRANT SELECT, INSERT, UPDATE ON TABLE app_updates TO moodalbum_runtime;
+GRANT SELECT ON TABLE app_updates TO moodalbum_runtime;
+
+-- 如果你要通过应用内的 /api/platform/app-update 发布更新，
+-- 再额外放开下面这条写权限：
+-- GRANT INSERT, UPDATE ON TABLE app_updates TO moodalbum_runtime;

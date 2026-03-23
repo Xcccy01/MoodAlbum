@@ -121,10 +121,11 @@ Open http://localhost:5173.
 Recommended local `.env`:
 
 ```env
+NODE_ENV=development
 DATABASE_URL=
 DATABASE_MIGRATION_URL=
 SESSION_SECRET=change-me
-PLATFORM_ADMIN_SECRET=change-this-too
+PLATFORM_ADMIN_SECRET=
 RUN_MIGRATIONS=true
 PORT=8787
 ```
@@ -176,10 +177,11 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
+NODE_ENV=production
 DATABASE_URL=postgres://moodalbum:your-db-password@127.0.0.1:5432/moodalbum_public
 DATABASE_MIGRATION_URL=postgres://moodalbum_migrator:your-migration-password@127.0.0.1:5432/moodalbum_public
 SESSION_SECRET=replace-with-a-long-random-string
-PLATFORM_ADMIN_SECRET=another-random-string-for-platform-update-api
+PLATFORM_ADMIN_SECRET=
 RUN_MIGRATIONS=false
 PORT=8787
 ```
@@ -187,7 +189,9 @@ PORT=8787
 Notes:
 - `DATABASE_URL` is the runtime connection string and should point to a least-privilege role
 - `DATABASE_MIGRATION_URL` is only for deployment-time migrations and can use a higher-privilege role
+- leave `PLATFORM_ADMIN_SECRET` empty unless you want to publish app updates through `/api/platform/app-update`; keeping it empty allows the runtime role to keep `app_updates` read-only
 - production should usually run with `RUN_MIGRATIONS=false`
+- production must explicitly set `NODE_ENV=production`, otherwise secure cookies and production config validation will not apply
 
 ### 4. Verify startup
 

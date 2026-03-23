@@ -122,10 +122,11 @@ npm run dev
 `.env` 里建议至少设置：
 
 ```env
+NODE_ENV=development
 DATABASE_URL=
 DATABASE_MIGRATION_URL=
 SESSION_SECRET=change-me
-PLATFORM_ADMIN_SECRET=change-this-too
+PLATFORM_ADMIN_SECRET=
 RUN_MIGRATIONS=true
 PORT=8787
 ```
@@ -177,10 +178,11 @@ cp .env.example .env
 编辑 `.env`：
 
 ```env
+NODE_ENV=production
 DATABASE_URL=postgres://moodalbum:你的数据库密码@127.0.0.1:5432/moodalbum_public
 DATABASE_MIGRATION_URL=postgres://moodalbum_migrator:迁移账号密码@127.0.0.1:5432/moodalbum_public
 SESSION_SECRET=一串足够长的随机字符
-PLATFORM_ADMIN_SECRET=另一串平台更新密钥
+PLATFORM_ADMIN_SECRET=
 RUN_MIGRATIONS=false
 PORT=8787
 ```
@@ -188,7 +190,9 @@ PORT=8787
 说明：
 - `DATABASE_URL` 给应用运行时使用，建议绑定最小权限角色
 - `DATABASE_MIGRATION_URL` 只在部署时执行迁移，建议绑定较高权限角色
+- `PLATFORM_ADMIN_SECRET` 留空时，平台更新发布接口会保持关闭，运行时角色只需对 `app_updates` 保留只读权限
 - 生产环境建议把 `RUN_MIGRATIONS=false`
+- 生产环境要显式设置 `NODE_ENV=production`，否则 `Secure` Cookie 和生产配置校验不会生效
 
 ### 4. 试运行
 
