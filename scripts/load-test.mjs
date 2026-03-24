@@ -6,6 +6,7 @@ import autocannon from "autocannon";
 import { USER_COOKIE } from "../server/config/constants.js";
 
 const baseUrl = process.env.BASE_URL || "http://127.0.0.1:8790";
+const allowInsecureTls = process.env.ALLOW_INSECURE_TLS === "1";
 const outputDir = path.resolve("test-artifacts");
 
 fs.mkdirSync(outputDir, { recursive: true });
@@ -35,6 +36,9 @@ async function request(url, options = {}) {
         path: `${target.pathname}${target.search}`,
         method: options.method || "GET",
         headers,
+        ...(target.protocol === "https:" && allowInsecureTls
+          ? { rejectUnauthorized: false }
+          : {}),
       },
       (res) => {
         const chunks = [];
@@ -91,7 +95,7 @@ async function createHousehold(cookie) {
 
 function runScenario(title, options) {
   return new Promise((resolve, reject) => {
-    autocannon(options, (error, result) => {
+    autocannon(withTlsOptions(options), (error, result) => {
       if (error) {
         reject(error);
         return;
@@ -108,6 +112,22 @@ function runScenario(title, options) {
       });
     });
   });
+}
+
+function withTlsOptions(options) {
+  const target = new URL(options.url);
+  if (target.protocol !== "https:" || !allowInsecureTls) {
+    return options;
+  }
+
+  return {
+    ...options,
+    rejectUnauthorized: false,
+    tlsOptions: {
+      ...(options.tlsOptions || {}),
+      rejectUnauthorized: false,
+    },
+  };
 }
 
 function assertHealthyScenario(result) {
