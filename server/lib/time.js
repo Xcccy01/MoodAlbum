@@ -5,21 +5,13 @@ export function nowIso() {
 }
 
 export function getChinaDateString(date = new Date()) {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: CHINA_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  const values = {};
-  for (const part of formatter.formatToParts(date)) {
-    if (part.type !== "literal") {
-      values[part.type] = part.value;
-    }
-  }
-
+  const values = getChinaDateParts(date);
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function getChinaMonthKey(date = new Date()) {
+  const values = getChinaDateParts(date);
+  return `${values.year}-${values.month}`;
 }
 
 export function toDayNumber(dateString) {
@@ -53,4 +45,22 @@ export function getPlantStage(totalCount) {
 
 export function getNextPlantStage(totalCount) {
   return PLANT_STAGES.find((stage) => stage.threshold > totalCount) || null;
+}
+
+function getChinaDateParts(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CHINA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const values = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
+
+  return values;
 }

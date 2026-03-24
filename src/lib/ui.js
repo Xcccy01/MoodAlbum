@@ -11,12 +11,30 @@ const PLANT_THRESHOLDS = [
 
 export { COLORS };
 
+function getTimeZoneParts(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const values = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
+
+  return values;
+}
+
 export function shuffleArray(items) {
   return [...items].sort(() => Math.random() - 0.5);
 }
 
-export function getCurrentSeasonKey() {
-  const month = new Date().getMonth() + 1;
+export function getCurrentSeasonKey(date = new Date()) {
+  const month = Number(getTimeZoneParts(date).month);
   if (month >= 3 && month <= 5) return "spring";
   if (month >= 6 && month <= 8) return "summer";
   if (month >= 9 && month <= 11) return "autumn";
@@ -66,29 +84,17 @@ export function formatCurrency(value) {
 }
 
 export function getMonthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  const parts = getTimeZoneParts(date);
+  return `${parts.year}-${parts.month}`;
 }
 
 export function toDateKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const parts = getTimeZoneParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 export function toChinaDateKey(date = new Date()) {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  const values = {};
-  for (const part of formatter.formatToParts(date)) {
-    if (part.type !== "literal") {
-      values[part.type] = part.value;
-    }
-  }
-
-  return `${values.year}-${values.month}-${values.day}`;
+  return toDateKey(date);
 }
 
 export function getMemberReplyState(mood) {

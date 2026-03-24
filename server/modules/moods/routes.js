@@ -36,6 +36,10 @@ function serializeMood(row, replies = []) {
   };
 }
 
+function createPlaceholderList(values, startIndex = 1) {
+  return values.map((_, index) => `$${startIndex + index}`).join(", ");
+}
+
 async function getCustomMoods(database, householdId, userId) {
   const result = await database.query(
     `
@@ -287,10 +291,10 @@ export function createMoodsRouter({ database }) {
                 u.username AS author_username
               FROM mood_replies mr
               JOIN users u ON u.id = mr.author_user_id
-              WHERE mr.mood_id = ANY($1::text[])
+              WHERE mr.mood_id IN (${createPlaceholderList(moodIds)})
               ORDER BY mr.created_at DESC
             `,
-            [moodIds]
+            moodIds
           )
         : { rows: [] };
 
@@ -322,6 +326,27 @@ export function createMoodsRouter({ database }) {
   );
 
   router.post(
+    "/replies/read-all",
+    requireHousehold,
+    asyncHandler(async (req, res) => {
+      await database.query(
+        `
+          UPDATE mood_replies
+          SET is_read = TRUE, read_at = $3
+          WHERE household_id = $1 AND recipient_user_id = $2 AND is_read = FALSE
+        `,
+        [req.context.household.id, req.context.user.id, nowIso()]
+      );
+
+      res.json({
+        ok: true,
+        latestReply: await getLatestReply(database, req.context.household.id, req.context.user.id),
+        unreadCount: await getUnreadReplyCount(database, req.context.household.id, req.context.user.id),
+      });
+    })
+  );
+
+  router.post(
     "/replies/read",
     requireHousehold,
     asyncHandler(async (req, res) => {
@@ -334,13 +359,19 @@ export function createMoodsRouter({ database }) {
         return;
       }
 
+      const placeholderList = createPlaceholderList(replyIds);
+      const householdIndex = replyIds.length + 1;
+      const recipientIndex = replyIds.length + 2;
+      const readAtIndex = replyIds.length + 3;
       await database.query(
         `
           UPDATE mood_replies
-          SET is_read = TRUE, read_at = $4
-          WHERE id = ANY($1::text[]) AND household_id = $2 AND recipient_user_id = $3
+          SET is_read = TRUE, read_at = $${readAtIndex}
+          WHERE id IN (${placeholderList})
+            AND household_id = $${householdIndex}
+            AND recipient_user_id = $${recipientIndex}
         `,
-        [replyIds, req.context.household.id, req.context.user.id, nowIso()]
+        [...replyIds, req.context.household.id, req.context.user.id, nowIso()]
       );
 
       res.json({

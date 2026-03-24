@@ -2,7 +2,7 @@ import express from "express";
 import { DEFAULT_CATEGORIES } from "../../config/constants.js";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { randomId } from "../../lib/security.js";
-import { nowIso } from "../../lib/time.js";
+import { getChinaMonthKey, nowIso } from "../../lib/time.js";
 import { requireHousehold } from "../../middleware/require-auth.js";
 
 function parseAmountToCents(rawAmount) {
@@ -65,8 +65,7 @@ async function getGroupedExpenses(database, householdId, userId) {
 
   const monthsMap = new Map();
   for (const row of result.rows) {
-    const spentAt = new Date(row.spent_at);
-    const monthKey = `${spentAt.getUTCFullYear()}-${String(spentAt.getUTCMonth() + 1).padStart(2, "0")}`;
+    const monthKey = getChinaMonthKey(new Date(row.spent_at));
     const item = {
       id: row.id,
       amount: formatMoneyFromCents(row.amount_cents),
@@ -162,13 +161,15 @@ export function createExpensesRouter({ database }) {
         [id, req.context.household.id, req.context.user.id, name, icon, createdAt]
       );
 
+      const category = {
+        id,
+        name,
+        icon,
+        isDefault: false,
+      };
       res.status(201).json({
-        item: {
-          id,
-          name,
-          icon,
-          isDefault: false,
-        },
+        item: category,
+        category,
       });
     })
   );
@@ -260,7 +261,10 @@ export function createExpensesRouter({ database }) {
         return;
       }
 
-      res.json({ ok: true });
+      res.json({
+        ok: true,
+        months: await getGroupedExpenses(database, req.context.household.id, req.context.user.id),
+      });
     })
   );
 

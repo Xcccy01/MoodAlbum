@@ -10,6 +10,12 @@ function makeInviteCode() {
   return crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
+function createHttpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
 export function createHouseholdsRouter({ database }) {
   const router = express.Router();
 
@@ -77,43 +83,81 @@ export function createHouseholdsRouter({ database }) {
         return;
       }
 
-      const result = await database.query(
-        `
-          SELECT hi.*, h.name AS household_name
-          FROM household_invites hi
-          JOIN households h ON h.id = hi.household_id
-          WHERE hi.code = $1
-        `,
-        [code]
-      );
-
-      const invite = result.rows[0];
-      if (!invite) {
-        res.status(404).json({ error: "邀请码不存在。" });
-        return;
-      }
-
-      if (invite.status === "revoked" || invite.revoked_at) {
-        res.status(409).json({ error: "这个邀请码已经失效了。" });
-        return;
-      }
-
-      if (invite.status === "used" || invite.used_at) {
-        res.status(409).json({ error: "这个邀请码已经被使用了。" });
-        return;
-      }
-
-      if (new Date(invite.expires_at).getTime() < Date.now()) {
-        await database.query(
-          "UPDATE household_invites SET status = 'expired' WHERE id = $1",
-          [invite.id]
-        );
-        res.status(409).json({ error: "这个邀请码已经过期了。" });
-        return;
-      }
-
       const joinedAt = nowIso();
+      let invite;
       await database.transaction(async (client) => {
+        const inviteResult = await client.query(
+          `
+            SELECT hi.*, h.name AS household_name
+            FROM household_invites hi
+            JOIN households h ON h.id = hi.household_id
+            WHERE hi.code = $1
+          `,
+          [code]
+        );
+
+        invite = inviteResult.rows[0];
+        if (!invite) {
+          throw createHttpError(404, "邀请码不存在。");
+        }
+
+        if (invite.status === "revoked" || invite.revoked_at) {
+          throw createHttpError(409, "这个邀请码已经失效了。");
+        }
+
+        if (invite.status === "used" || invite.used_at) {
+          throw createHttpError(409, "这个邀请码已经被使用了。");
+        }
+
+        if (new Date(invite.expires_at).getTime() < Date.now()) {
+          await client.query(
+            "UPDATE household_invites SET status = 'expired' WHERE id = $1",
+            [invite.id]
+          );
+          throw createHttpError(409, "这个邀请码已经过期了。");
+        }
+
+        const claimedInvite = await client.query(
+          `
+            UPDATE household_invites
+            SET status = 'used', used_by_user_id = $2, used_at = $3
+            WHERE id = $1
+              AND status = 'active'
+              AND revoked_at IS NULL
+              AND used_at IS NULL
+              AND expires_at >= $4
+            RETURNING id
+          `,
+          [invite.id, req.context.user.id, joinedAt, joinedAt]
+        );
+
+        if (claimedInvite.rowCount === 0) {
+          const currentInviteResult = await client.query(
+            `
+              SELECT status, used_at, revoked_at, expires_at
+              FROM household_invites
+              WHERE id = $1
+            `,
+            [invite.id]
+          );
+          const currentInvite = currentInviteResult.rows[0];
+
+          if (!currentInvite) {
+            throw createHttpError(404, "邀请码不存在。");
+          }
+          if (currentInvite.status === "revoked" || currentInvite.revoked_at) {
+            throw createHttpError(409, "这个邀请码已经失效了。");
+          }
+          if (currentInvite.status === "used" || currentInvite.used_at) {
+            throw createHttpError(409, "这个邀请码已经被使用了。");
+          }
+          if (new Date(currentInvite.expires_at).getTime() < Date.now()) {
+            throw createHttpError(409, "这个邀请码已经过期了。");
+          }
+
+          throw createHttpError(409, "这个邀请码当前不可用。");
+        }
+
         await client.query(
           `
             INSERT INTO household_members (
@@ -124,14 +168,6 @@ export function createHouseholdsRouter({ database }) {
           [randomId(), invite.household_id, req.context.user.id, invite.role, req.context.user.username, joinedAt]
         );
 
-        await client.query(
-          `
-            UPDATE household_invites
-            SET status = 'used', used_by_user_id = $2, used_at = $3
-            WHERE id = $1
-          `,
-          [invite.id, req.context.user.id, joinedAt]
-        );
       });
 
       res.status(201).json({

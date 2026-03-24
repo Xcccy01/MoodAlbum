@@ -1,6 +1,7 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { api, ApiError } from "../../lib/api.js";
 import {
+  APP_TIME_ZONE,
   APP_NAME,
   CUSTOM_MOOD_ICONS,
   DEFAULT_CATEGORY_ICONS,
@@ -29,6 +30,7 @@ function getGreeting() {
 
 function Header({ session, onLogout, unreadCount, canAccessCare, onOpenCareApp }) {
   const headerDate = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: APP_TIME_ZONE,
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -139,15 +141,6 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
   const [expenseNotice, setExpenseNotice] = useState({ tone: "", message: "" });
   const currentMonthKey = getMonthKey(new Date());
 
-  const unreadReplyIds = useMemo(
-    () =>
-      moodItems
-        .flatMap((item) => item.replies || [])
-        .filter((reply) => !reply.isRead)
-        .map((reply) => reply.id),
-    [moodItems]
-  );
-
   useEffect(() => {
     void Promise.all([
       refreshMoodData(),
@@ -197,12 +190,12 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab !== "mood" || unreadReplyIds.length === 0) {
+    if (activeTab !== "mood" || unreadCount === 0) {
       return;
     }
 
-    void markRepliesRead(unreadReplyIds, false);
-  }, [activeTab, unreadReplyIds]);
+    void markAllRepliesRead(false);
+  }, [activeTab, unreadCount]);
 
   async function refreshMoodData() {
     try {
@@ -289,11 +282,10 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
     }
   }
 
-  async function markRepliesRead(replyIds, showFeedback = true) {
+  async function markAllRepliesRead(showFeedback = true) {
     try {
-      await api("/api/replies/read", {
+      await api("/api/replies/read-all", {
         method: "POST",
-        body: JSON.stringify({ replyIds }),
       });
       if (showFeedback) {
         setFeedback("已自动更新阅读状态。");
@@ -400,10 +392,14 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
         method: "POST",
         body: JSON.stringify(newCategory),
       });
+      const category = response.item || response.category;
+      if (!category?.id) {
+        throw new Error("新增分类返回不完整。");
+      }
       setShowCategoryPanel(false);
       setNewCategory({ name: "", icon: DEFAULT_CATEGORY_ICONS[0] });
-      setExpenseForm((prev) => ({ ...prev, categoryId: response.category.id }));
-      setFeedback(`已添加分类“${response.category.name}”。`);
+      setExpenseForm((prev) => ({ ...prev, categoryId: category.id }));
+      setFeedback(`已添加分类“${category.name}”。`);
       await refreshCategories();
     } catch (requestError) {
       handleRequestError(requestError, onRequestError, setError);
@@ -446,7 +442,11 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
     try {
       const result = await api(`/api/expenses/${id}`, { method: "DELETE" });
       setFeedback("账目已删除。");
-      setExpenseMonths(result.months || []);
+      if (Array.isArray(result.months)) {
+        setExpenseMonths(result.months);
+      } else {
+        await refreshExpenses();
+      }
     } catch (requestError) {
       handleRequestError(requestError, onRequestError, setError);
     } finally {
@@ -480,6 +480,7 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
     recentDays.push({
       key: toDateKey(date),
       label: new Intl.DateTimeFormat("zh-CN", {
+        timeZone: APP_TIME_ZONE,
         month: "numeric",
         day: "numeric",
       }).format(date),
@@ -495,7 +496,7 @@ export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) 
       categoryTotals[category.categoryId].value += category.totalAmount;
 
       for (const item of category.items || []) {
-        const dayKey = item.spentAt.slice(0, 10);
+        const dayKey = toDateKey(new Date(item.spentAt));
         dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + item.amount;
       }
     }

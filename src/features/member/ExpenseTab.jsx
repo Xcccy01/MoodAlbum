@@ -97,6 +97,7 @@ export function ExpenseTab({
               type="button"
               className="pill-button add"
               onClick={() => setShowCategoryPanel((prev) => !prev)}
+              data-testid="category-add-toggle"
             >
               添加
             </button>
@@ -114,6 +115,7 @@ export function ExpenseTab({
                   setNewCategory((prev) => ({ ...prev, name: event.target.value }))
                 }
                 placeholder="例如：家居、宠物、旅行"
+                data-testid="category-name-input"
               />
             </div>
             <div className="field">
@@ -135,7 +137,12 @@ export function ExpenseTab({
               </div>
             </div>
             <div className="button-row">
-              <button type="button" className="primary-button" onClick={onCreateCategory}>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={onCreateCategory}
+                data-testid="category-submit"
+              >
                 确认添加
               </button>
               <button
@@ -156,6 +163,7 @@ export function ExpenseTab({
             value={expenseForm.note}
             onChange={(event) => setExpenseForm((prev) => ({ ...prev, note: event.target.value }))}
             placeholder="这笔花费用来做什么，可以不填"
+            data-testid="expense-note"
           />
         </div>
 
@@ -348,6 +356,7 @@ export function ExpenseTab({
                                       className="ghost-button"
                                       style={{ minHeight: 34, marginTop: 8, padding: "0 12px" }}
                                       onClick={() => onDeleteExpense(item.id)}
+                                      data-testid="expense-delete"
                                     >
                                       删除
                                     </button>
