@@ -33,6 +33,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   const [invites, setInvites] = useState([]);
   const [inviteRole, setInviteRole] = useState("member");
   const baseDataRequestIdRef = useRef(0);
+  const inviteMutationVersionRef = useRef(0);
   const moodsRequestIdRef = useRef(0);
   const moodDetailRequestIdRef = useRef(0);
 
@@ -89,6 +90,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   async function loadBaseData() {
     const requestId = baseDataRequestIdRef.current + 1;
     baseDataRequestIdRef.current = requestId;
+    const inviteVersionAtStart = inviteMutationVersionRef.current;
 
     const result = await runRequest("正在加载家庭信息...", async () => {
       const [membersData, invitesData] = await Promise.all([
@@ -105,7 +107,9 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
 
     if (result && requestId === baseDataRequestIdRef.current) {
       setMembers(result.members);
-      setInvites(result.invites);
+      if (inviteVersionAtStart === inviteMutationVersionRef.current) {
+        setInvites(result.invites);
+      }
     }
   }
 
@@ -218,6 +222,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
     );
 
     if (result) {
+      inviteMutationVersionRef.current += 1;
       setInvites((prev) => [result.invite, ...prev]);
     }
   }
@@ -230,6 +235,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
     );
 
     if (result) {
+      inviteMutationVersionRef.current += 1;
       setInvites((prev) =>
         prev.map((invite) =>
           invite.id === inviteId ? { ...invite, status: "revoked" } : invite

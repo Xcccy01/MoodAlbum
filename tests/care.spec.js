@@ -63,6 +63,8 @@ test("家人回复端可以邀请、加入并回复成员心情", async ({ page 
   await page.getByTestId("care-reply-input").fill("已经看到这条心情了，先慢一点，照顾好自己。");
   await page.getByTestId("care-reply-submit").click({ force: true });
   await expect(page.getByText("已经看到这条心情了，先慢一点，照顾好自己。")).toBeVisible();
+  await page.getByRole("button", { name: "全部记录" }).click();
+  await expect(page.getByTestId("care-mood-item").first()).toContainText("未读");
   await logout(page);
 
   await page.getByTestId("auth-username").fill(`m_${stamp}`);
@@ -158,4 +160,26 @@ test("回复端快速切换心情时不会被旧详情覆盖", async ({ page }) 
   await moodItems.nth(2).click();
 
   await expect(page.getByTestId("care-selected-mood-label")).toHaveText("不太好");
+});
+
+test("回复端生成邀请码后不会被旧列表覆盖", async ({ page }) => {
+  const stamp = Date.now().toString(36);
+  let delayedInviteRequestHandled = false;
+
+  await page.route(/\/api\/care\/invites$/, async (route) => {
+    if (!delayedInviteRequestHandled) {
+      delayedInviteRequestHandled = true;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+    await route.continue();
+  });
+
+  await register(page, "/care", `o3_${stamp}`, "secret123");
+  await createHousehold(page, `家庭_${stamp}`);
+
+  const codes = page.getByTestId("invite-code");
+  await page.getByTestId("care-create-invite").click({ force: true });
+  await expect(codes).toHaveCount(1);
+  await page.waitForTimeout(700);
+  await expect(codes).toHaveCount(1);
 });

@@ -14,11 +14,12 @@ const outputDir = path.resolve(
 const baseUrlInput = process.env.APP_BASE_URL || process.argv[2];
 
 if (!baseUrlInput) {
-  console.error("Missing APP_BASE_URL. Example: APP_BASE_URL=http://82.156.84.170 npm run android:apk");
+  console.error("Missing APP_BASE_URL. Example: APP_BASE_URL=https://YOUR_HOST npm run android:apk");
   process.exit(1);
 }
 
 const baseUrl = baseUrlInput.replace(/\/+$/, "");
+const usesHttps = /^https:\/\//i.test(baseUrl);
 const capacitorConfigPath = path.join(rootDir, "capacitor.config.json");
 const originalCapacitorConfig = fs.readFileSync(capacitorConfigPath, "utf8");
 
@@ -47,7 +48,11 @@ function applyServerUrl() {
   config.server = {
     ...(config.server || {}),
     url: baseUrl,
-    cleartext: true,
+    cleartext: !usesHttps,
+  };
+  config.android = {
+    ...(config.android || {}),
+    allowMixedContent: !usesHttps,
   };
   fs.writeFileSync(capacitorConfigPath, `${JSON.stringify(config, null, 2)}\n`);
 }

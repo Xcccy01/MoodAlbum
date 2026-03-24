@@ -1,8 +1,11 @@
+import { APP_TIME_ZONE } from "./constants.js";
+
 export function formatDateTime(value) {
   if (!value) {
     return "";
   }
   return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: APP_TIME_ZONE,
     month: "numeric",
     day: "numeric",
     hour: "2-digit",
@@ -15,6 +18,7 @@ export function formatDate(value) {
     return "";
   }
   return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: APP_TIME_ZONE,
     year: "numeric",
     month: "numeric",
     day: "numeric",

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
+import { asyncHandler } from "./lib/async-handler.js";
 import { getSessionUserId, rateLimit } from "./middleware/rate-limit.js";
 import { attachRequestContext } from "./middleware/request-context.js";
 import { errorHandler, notFoundHandler } from "./middleware/require-auth.js";
@@ -25,10 +26,13 @@ export function createApp({ config, database }) {
   app.set("trust proxy", config.trustProxy);
   app.use(express.json({ limit: "1mb" }));
 
-  app.get("/api/health", async (_req, res) => {
-    await database.query("SELECT 1");
-    res.json({ ok: true });
-  });
+  app.get(
+    "/api/health",
+    asyncHandler(async (_req, res) => {
+      await database.query("SELECT 1");
+      res.json({ ok: true });
+    })
+  );
 
   app.use(
     "/api",

@@ -106,12 +106,11 @@ export function getMemberReplyState(mood) {
     return "ignored";
   }
 
-  const replies = mood.replies || [];
-  if (!replies.length) {
+  if (!hasReplies(mood)) {
     return "pending";
   }
 
-  const unreadReplyCount = replies.filter((reply) => !reply.isRead).length;
+  const unreadReplyCount = getUnreadReplyCount(mood);
   return unreadReplyCount > 0 ? "unread" : "read";
 }
 
@@ -128,11 +127,36 @@ export function getAdminReplyState(mood) {
     return "pending";
   }
 
-  const replies = mood.replies || [];
-  if (!replies.length) {
+  if (!hasReplies(mood)) {
     return mood.replyStatus === "replied" ? "replied" : "pending";
   }
 
-  const unreadReplyCount = replies.filter((reply) => !reply.isRead).length;
+  const unreadReplyCount = getUnreadReplyCount(mood);
   return unreadReplyCount > 0 ? "unread" : "read";
+}
+
+function hasReplies(mood) {
+  if (!mood) {
+    return false;
+  }
+
+  if (Array.isArray(mood.replies)) {
+    return mood.replies.length > 0;
+  }
+
+  const replyCount = Number(mood.replyCount || 0);
+  return Number.isFinite(replyCount) && replyCount > 0;
+}
+
+function getUnreadReplyCount(mood) {
+  if (!mood) {
+    return 0;
+  }
+
+  if (Array.isArray(mood.replies)) {
+    return mood.replies.filter((reply) => !reply.isRead).length;
+  }
+
+  const unreadReplyCount = Number(mood.unreadReplyCount || 0);
+  return Number.isFinite(unreadReplyCount) ? unreadReplyCount : 0;
 }
