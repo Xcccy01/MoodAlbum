@@ -18,6 +18,7 @@ async function startTestServer(configOverrides = {}) {
     port: 0,
     databaseUrl: "",
     sessionSecret: "test-session-secret",
+    trustProxy: false,
     secureCookies: false,
     platformAdminSecret: "test-platform-secret",
     runMigrationsOnBoot: false,
@@ -26,6 +27,7 @@ async function startTestServer(configOverrides = {}) {
     anonymousApiRateLimitMax: 600,
     authRateLimitWindowMs: 60_000,
     loginRateLimitMax: 300,
+    loginAccountRateLimitMax: 100,
     registerRateLimitMax: 200,
     ...configOverrides,
   };
@@ -171,4 +173,61 @@ test("注册和登录使用独立的限流桶", async (t) => {
   assert.equal(loginResponse.response.status, 200);
   assert.equal(throttledLoginResponse.response.status, 429);
   assert.equal(throttledLoginResponse.data.error, "登录尝试过于频繁，请稍后再试。");
+});
+
+test("同一 IP 轮换用户名也不能绕过登录限流", async (t) => {
+  const server = await startTestServer({
+    loginRateLimitMax: 1,
+    loginAccountRateLimitMax: 10,
+  });
+  t.after(async () => {
+    await server.close();
+  });
+
+  await createUser(server.database, "user_one");
+  await createUser(server.database, "user_two");
+
+  const ip = "203.0.113.22";
+  const firstResponse = await request(server.baseUrl, "/api/auth/login", {
+    method: "POST",
+    ip,
+    body: {
+      username: "user_one",
+      password: "wrong-password",
+    },
+  });
+
+  const secondResponse = await request(server.baseUrl, "/api/auth/login", {
+    method: "POST",
+    ip,
+    body: {
+      username: "user_two",
+      password: "wrong-password",
+    },
+  });
+
+  assert.equal(firstResponse.response.status, 401);
+  assert.equal(secondResponse.response.status, 429);
+  assert.equal(secondResponse.data.error, "登录尝试过于频繁，请稍后再试。");
+});
+
+test("trust proxy 启用时不会信任伪造的第一个 X-Forwarded-For", async (t) => {
+  const server = await startTestServer({
+    trustProxy: 1,
+    anonymousApiRateLimitMax: 1,
+  });
+  t.after(async () => {
+    await server.close();
+  });
+
+  const firstResponse = await request(server.baseUrl, "/api/me", {
+    ip: "1.1.1.1, 198.51.100.24",
+  });
+  const secondResponse = await request(server.baseUrl, "/api/me", {
+    ip: "2.2.2.2, 198.51.100.24",
+  });
+
+  assert.equal(firstResponse.response.status, 200);
+  assert.equal(secondResponse.response.status, 429);
+  assert.equal(secondResponse.data.error, "请求过于频繁，请稍后再试。");
 });

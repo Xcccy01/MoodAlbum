@@ -3,15 +3,19 @@ import { parseCookies, readSessionValue } from "../lib/security.js";
 
 const CLEANUP_INTERVAL_MS = 60_000;
 
-export function getClientIp(req) {
-  return (
-    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    "unknown"
-  );
+function normalizeIp(ip) {
+  if (!ip) {
+    return "";
+  }
+
+  return String(ip).replace(/^::ffff:/, "");
 }
 
-function getSessionUserId(req, sessionSecret = "") {
+export function getClientIp(req) {
+  return normalizeIp(req.ip || req.socket?.remoteAddress || "unknown");
+}
+
+export function getSessionUserId(req, sessionSecret = "") {
   if (req.context?.user?.id) {
     return req.context.user.id;
   }

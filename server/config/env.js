@@ -21,6 +21,7 @@ export function createConfig({ preferMigrationUrl = false } = {}) {
     port: Number(process.env.PORT || 8787),
     databaseUrl,
     sessionSecret,
+    trustProxy: resolveTrustProxy(process.env.TRUST_PROXY, nodeEnv),
     secureCookies: resolveSecureCookiesMode(process.env.SECURE_COOKIES, nodeEnv),
     platformAdminSecret: process.env.PLATFORM_ADMIN_SECRET || "",
     runMigrationsOnBoot: process.env.RUN_MIGRATIONS !== "false",
@@ -37,6 +38,10 @@ export function createConfig({ preferMigrationUrl = false } = {}) {
     loginRateLimitMax: readPositiveInteger(
       process.env.LOGIN_RATE_LIMIT_MAX,
       nodeEnv === "production" ? 30 : 300
+    ),
+    loginAccountRateLimitMax: readPositiveInteger(
+      process.env.LOGIN_ACCOUNT_RATE_LIMIT_MAX,
+      nodeEnv === "production" ? 10 : 100
     ),
     registerRateLimitMax: readPositiveInteger(
       process.env.REGISTER_RATE_LIMIT_MAX,
@@ -57,6 +62,28 @@ function resolveSecureCookiesMode(rawValue, nodeEnv) {
     return false;
   }
   return nodeEnv === "production" ? "auto" : false;
+}
+
+function resolveTrustProxy(rawValue, nodeEnv) {
+  const normalized = String(rawValue || "").trim().toLowerCase();
+  if (!normalized) {
+    return nodeEnv === "production" ? 1 : false;
+  }
+
+  if (["false", "0", "off", "no"].includes(normalized)) {
+    return false;
+  }
+
+  if (["true", "on", "yes"].includes(normalized)) {
+    return 1;
+  }
+
+  const parsed = Number(normalized);
+  if (Number.isInteger(parsed) && parsed >= 0) {
+    return parsed;
+  }
+
+  return nodeEnv === "production" ? 1 : false;
 }
 
 function readPositiveInteger(rawValue, fallback) {

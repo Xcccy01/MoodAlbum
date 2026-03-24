@@ -24,13 +24,12 @@ function validatePassword(password) {
   return typeof password === "string" && password.length >= 6 && password.length <= 64;
 }
 
-function getAuthAttemptKey(req) {
-  const username = normalizeUsername(req.body?.username).toLowerCase();
-  const parts = [`ip:${getClientIp(req)}`];
-  if (username) {
-    parts.push(`username:${username}`);
-  }
-  return parts.join(":");
+function getAuthIpKey(req) {
+  return `ip:${getClientIp(req)}`;
+}
+
+function getAuthUsernameKey(req) {
+  return `username:${normalizeUsername(req.body?.username).toLowerCase() || "unknown"}`;
 }
 
 function buildAuthPayload(context) {
@@ -49,18 +48,25 @@ function buildAuthPayload(context) {
 export function createAuthRouter({ config, database }) {
   const router = express.Router();
 
-  const registerLimit = authRateLimit({
+  const registerIpLimit = authRateLimit({
     windowMs: config.authRateLimitWindowMs,
     max: config.registerRateLimitMax,
-    keyPrefix: "register",
-    key: getAuthAttemptKey,
+    keyPrefix: "register-ip",
+    key: getAuthIpKey,
     message: "注册尝试过于频繁，请稍后再试。",
   });
-  const loginLimit = authRateLimit({
+  const loginIpLimit = authRateLimit({
     windowMs: config.authRateLimitWindowMs,
     max: config.loginRateLimitMax,
-    keyPrefix: "login",
-    key: getAuthAttemptKey,
+    keyPrefix: "login-ip",
+    key: getAuthIpKey,
+    message: "登录尝试过于频繁，请稍后再试。",
+  });
+  const loginUsernameLimit = authRateLimit({
+    windowMs: config.authRateLimitWindowMs,
+    max: config.loginAccountRateLimitMax,
+    keyPrefix: "login-username",
+    key: getAuthUsernameKey,
     message: "登录尝试过于频繁，请稍后再试。",
   });
 
@@ -80,7 +86,7 @@ export function createAuthRouter({ config, database }) {
 
   router.post(
     "/register",
-    registerLimit,
+    registerIpLimit,
     asyncHandler(async (req, res) => {
       const username = normalizeUsername(req.body?.username);
       const password = String(req.body?.password || "");
@@ -130,7 +136,8 @@ export function createAuthRouter({ config, database }) {
 
   router.post(
     "/login",
-    loginLimit,
+    loginIpLimit,
+    loginUsernameLimit,
     asyncHandler(async (req, res) => {
       const username = normalizeUsername(req.body?.username);
       const password = String(req.body?.password || "");

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { rateLimit } from "./middleware/rate-limit.js";
+import { getSessionUserId, rateLimit } from "./middleware/rate-limit.js";
 import { attachRequestContext } from "./middleware/request-context.js";
 import { errorHandler, notFoundHandler } from "./middleware/require-auth.js";
 import { createAppUpdatesRouter } from "./modules/app-updates/routes.js";
@@ -22,23 +22,26 @@ export function createApp({ config, database }) {
   const app = express();
 
   app.disable("x-powered-by");
+  app.set("trust proxy", config.trustProxy);
   app.use(express.json({ limit: "1mb" }));
-  app.use("/api", attachRequestContext({ config, database }));
+
+  app.get("/api/health", async (_req, res) => {
+    await database.query("SELECT 1");
+    res.json({ ok: true });
+  });
+
   app.use(
     "/api",
     rateLimit({
       windowMs: config.apiRateLimitWindowMs,
       sessionSecret: config.sessionSecret,
       max: (req) =>
-        req.context?.user ? config.apiRateLimitMax : config.anonymousApiRateLimitMax,
-      skip: (req) => req.path === "/health",
+        getSessionUserId(req, config.sessionSecret)
+          ? config.apiRateLimitMax
+          : config.anonymousApiRateLimitMax,
     })
   );
-
-  app.get("/api/health", async (_req, res) => {
-    await database.query("SELECT 1");
-    res.json({ ok: true });
-  });
+  app.use("/api", attachRequestContext({ config, database }));
 
   app.get("/api/me", (req, res) => {
     res.json({
