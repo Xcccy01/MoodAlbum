@@ -23,8 +23,17 @@ export function createApp({ config, database }) {
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
-  app.use("/api", rateLimit({ windowMs: 60_000, max: config.isProduction ? 60 : 600 }));
-  app.use(attachRequestContext({ config, database }));
+  app.use("/api", attachRequestContext({ config, database }));
+  app.use(
+    "/api",
+    rateLimit({
+      windowMs: config.apiRateLimitWindowMs,
+      sessionSecret: config.sessionSecret,
+      max: (req) =>
+        req.context?.user ? config.apiRateLimitMax : config.anonymousApiRateLimitMax,
+      skip: (req) => req.path === "/health",
+    })
+  );
 
   app.get("/api/health", async (_req, res) => {
     await database.query("SELECT 1");

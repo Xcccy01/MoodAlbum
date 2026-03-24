@@ -13,6 +13,7 @@
     "db:migrate": "node scripts/run-migrations.mjs",
     "db:check": "node scripts/postgres-production-check.mjs",
     "test:load": "node scripts/load-test.mjs",
+    "test:server": "node --test tests/server/*.test.mjs",
     "test:ui": "playwright test",
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",

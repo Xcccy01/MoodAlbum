@@ -15,11 +15,19 @@ export function shuffleArray(items) {
   return [...items].sort(() => Math.random() - 0.5);
 }
 
-export function getCurrentSeason() {
+export function getCurrentSeasonKey() {
   const month = new Date().getMonth() + 1;
-  if (month >= 3 && month <= 5) return "春";
-  if (month >= 6 && month <= 8) return "夏";
-  if (month >= 9 && month <= 11) return "秋";
+  if (month >= 3 && month <= 5) return "spring";
+  if (month >= 6 && month <= 8) return "summer";
+  if (month >= 9 && month <= 11) return "autumn";
+  return "winter";
+}
+
+export function getCurrentSeason() {
+  const seasonKey = getCurrentSeasonKey();
+  if (seasonKey === "spring") return "春";
+  if (seasonKey === "summer") return "夏";
+  if (seasonKey === "autumn") return "秋";
   return "冬";
 }
 

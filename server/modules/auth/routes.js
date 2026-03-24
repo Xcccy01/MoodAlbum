@@ -1,6 +1,6 @@
 import express from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
-import { authRateLimit } from "../../middleware/rate-limit.js";
+import { authRateLimit, getClientIp } from "../../middleware/rate-limit.js";
 import {
   applySessionCookie,
   clearSessionCookie,
@@ -24,6 +24,15 @@ function validatePassword(password) {
   return typeof password === "string" && password.length >= 6 && password.length <= 64;
 }
 
+function getAuthAttemptKey(req) {
+  const username = normalizeUsername(req.body?.username).toLowerCase();
+  const parts = [`ip:${getClientIp(req)}`];
+  if (username) {
+    parts.push(`username:${username}`);
+  }
+  return parts.join(":");
+}
+
 function buildAuthPayload(context) {
   return {
     authenticated: Boolean(context?.user),
@@ -40,7 +49,20 @@ function buildAuthPayload(context) {
 export function createAuthRouter({ config, database }) {
   const router = express.Router();
 
-  const loginLimit = authRateLimit({ windowMs: 60_000, max: config.isProduction ? 10 : 200 });
+  const registerLimit = authRateLimit({
+    windowMs: config.authRateLimitWindowMs,
+    max: config.registerRateLimitMax,
+    keyPrefix: "register",
+    key: getAuthAttemptKey,
+    message: "注册尝试过于频繁，请稍后再试。",
+  });
+  const loginLimit = authRateLimit({
+    windowMs: config.authRateLimitWindowMs,
+    max: config.loginRateLimitMax,
+    keyPrefix: "login",
+    key: getAuthAttemptKey,
+    message: "登录尝试过于频繁，请稍后再试。",
+  });
 
   router.get(
     "/session",
@@ -58,7 +80,7 @@ export function createAuthRouter({ config, database }) {
 
   router.post(
     "/register",
-    loginLimit,
+    registerLimit,
     asyncHandler(async (req, res) => {
       const username = normalizeUsername(req.body?.username);
       const password = String(req.body?.password || "");

@@ -12,6 +12,290 @@
   --line: rgba(107, 175, 123, 0.18);
   --shadow: 0 20px 35px rgba(107, 175, 123, 0.12);
   --shadow-soft: 0 12px 25px rgba(107, 175, 123, 0.08);
+  --surface-card: rgba(255, 255, 255, 0.9);
+  --surface-border: rgba(255, 255, 255, 0.65);
+  --page-background:
+    radial-gradient(circle at top left, rgba(232, 200, 88, 0.18), transparent 32%),
+    radial-gradient(circle at top right, rgba(126, 184, 216, 0.18), transparent 30%),
+    linear-gradient(180deg, #fbfdf8 0%, var(--background) 45%, #eef7ef 100%);
+  --chip-background: rgba(107, 175, 123, 0.1);
+  --badge-background: linear-gradient(135deg, rgba(107, 175, 123, 0.16), rgba(242, 168, 133, 0.2));
+  --soft-badge-background: linear-gradient(135deg, rgba(107, 175, 123, 0.12), rgba(126, 184, 216, 0.16));
+  --banner-background: linear-gradient(135deg, rgba(107, 175, 123, 0.96), rgba(126, 184, 216, 0.92));
+  --update-banner-background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 28%),
+    linear-gradient(135deg, #6d69d9, #79a6ff 48%, #8eddb1 100%);
+  --auth-card-background:
+    radial-gradient(circle at top left, rgba(232, 200, 88, 0.2), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(126, 184, 216, 0.18), transparent 32%),
+    rgba(255, 255, 255, 0.94);
+  --auth-card-shadow: 0 24px 50px rgba(107, 175, 123, 0.14);
+  --auth-orb-left: rgba(107, 175, 123, 0.18);
+  --auth-orb-right: rgba(242, 168, 133, 0.18);
+  --divider-background: linear-gradient(90deg, transparent, rgba(107, 175, 123, 0.45), transparent);
+  --reply-item-background: rgba(107, 175, 123, 0.08);
+  --reply-bar-background: linear-gradient(180deg, var(--primary), rgba(107, 175, 123, 0.35));
+  --primary-button-background: linear-gradient(135deg, var(--primary), #82c292);
+  --primary-button-shadow: 0 14px 24px rgba(107, 175, 123, 0.26);
+  --secondary-button-background: rgba(107, 175, 123, 0.12);
+  --ghost-button-background: rgba(255, 255, 255, 0.66);
+  --ghost-button-border: rgba(107, 175, 123, 0.14);
+  --pill-border: rgba(107, 175, 123, 0.12);
+  --pill-active-background: linear-gradient(135deg, rgba(107, 175, 123, 0.18), rgba(126, 184, 216, 0.16));
+  --pill-active-border: rgba(107, 175, 123, 0.32);
+  --pill-add-border: rgba(107, 175, 123, 0.32);
+  --input-border: rgba(107, 175, 123, 0.18);
+  --currency-background: linear-gradient(135deg, rgba(107, 175, 123, 0.1), rgba(232, 200, 88, 0.1));
+  --icon-chip-border: rgba(107, 175, 123, 0.12);
+  --icon-chip-active-border: rgba(107, 175, 123, 0.38);
+  --icon-chip-active-background: rgba(107, 175, 123, 0.12);
+  --editor-background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(235, 246, 238, 0.9));
+  --custom-mood-background: linear-gradient(135deg, rgba(107, 175, 123, 0.12), rgba(255, 255, 255, 0.95));
+  --custom-mood-border: rgba(107, 175, 123, 0.16);
+  --tabs-background: rgba(255, 255, 255, 0.72);
+  --tabs-border: rgba(255, 255, 255, 0.9);
+  --tabs-shadow: 0 18px 38px rgba(59, 74, 62, 0.14);
+  --nav-active-background: linear-gradient(180deg, rgba(107, 175, 123, 0.16), rgba(255, 255, 255, 0.9));
+  --plant-background:
+    radial-gradient(circle at top right, rgba(232, 200, 88, 0.26), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(230, 245, 232, 0.96));
+  --plant-avatar-background: rgba(255, 255, 255, 0.72);
+  --progress-track-background: rgba(107, 175, 123, 0.12);
+  --progress-fill-background: linear-gradient(90deg, var(--primary), var(--yellow));
+  --dot-background: rgba(107, 175, 123, 0.16);
+  --dot-active-background: linear-gradient(135deg, var(--primary), #84c89b);
+  --dot-active-shadow: 0 0 0 4px rgba(107, 175, 123, 0.12);
+  --summary-background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(251, 241, 225, 0.92));
+  --category-card-background: rgba(107, 175, 123, 0.06);
+  --item-divider: 1px dashed rgba(107, 175, 123, 0.14);
+  --empty-card-background: rgba(255, 255, 255, 0.72);
+  --admin-item-background: rgba(107, 175, 123, 0.06);
+  --admin-item-active-background: rgba(107, 175, 123, 0.14);
+  --admin-item-active-border: rgba(107, 175, 123, 0.22);
+  --care-summary-background: rgba(107, 175, 123, 0.06);
+  --mood-cloud-background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.65), transparent 22%),
+    radial-gradient(circle at 78% 20%, rgba(242, 168, 133, 0.18), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.55));
+}
+
+:root[data-season="summer"] {
+  --background: #eefaf8;
+  --primary: #4fae9f;
+  --peach: #f6b46d;
+  --blue: #72b8ea;
+  --lavender: #92b2de;
+  --yellow: #f2d767;
+  --rose: #f39c7b;
+  --text: #31484a;
+  --muted: #7d9997;
+  --line: rgba(79, 174, 159, 0.18);
+  --shadow: 0 20px 35px rgba(79, 174, 159, 0.12);
+  --shadow-soft: 0 12px 25px rgba(79, 174, 159, 0.08);
+  --page-background:
+    radial-gradient(circle at top left, rgba(242, 215, 103, 0.18), transparent 32%),
+    radial-gradient(circle at top right, rgba(114, 184, 234, 0.22), transparent 30%),
+    linear-gradient(180deg, #f9fffe 0%, var(--background) 42%, #e7f8f6 100%);
+  --chip-background: rgba(79, 174, 159, 0.12);
+  --badge-background: linear-gradient(135deg, rgba(79, 174, 159, 0.18), rgba(114, 184, 234, 0.22));
+  --soft-badge-background: linear-gradient(135deg, rgba(79, 174, 159, 0.14), rgba(114, 184, 234, 0.2));
+  --banner-background: linear-gradient(135deg, rgba(79, 174, 159, 0.96), rgba(114, 184, 234, 0.92));
+  --update-banner-background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, #2c9fc4, #62c7c9 52%, #ffd36b 100%);
+  --auth-card-background:
+    radial-gradient(circle at top left, rgba(242, 215, 103, 0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(114, 184, 234, 0.2), transparent 32%),
+    rgba(255, 255, 255, 0.94);
+  --auth-card-shadow: 0 24px 50px rgba(79, 174, 159, 0.12);
+  --auth-orb-left: rgba(79, 174, 159, 0.18);
+  --auth-orb-right: rgba(114, 184, 234, 0.18);
+  --divider-background: linear-gradient(90deg, transparent, rgba(79, 174, 159, 0.45), transparent);
+  --reply-item-background: rgba(79, 174, 159, 0.08);
+  --reply-bar-background: linear-gradient(180deg, var(--primary), rgba(79, 174, 159, 0.35));
+  --primary-button-background: linear-gradient(135deg, var(--primary), #76c8bc);
+  --primary-button-shadow: 0 14px 24px rgba(79, 174, 159, 0.24);
+  --secondary-button-background: rgba(79, 174, 159, 0.12);
+  --ghost-button-border: rgba(79, 174, 159, 0.16);
+  --pill-border: rgba(79, 174, 159, 0.14);
+  --pill-active-background: linear-gradient(135deg, rgba(79, 174, 159, 0.18), rgba(114, 184, 234, 0.16));
+  --pill-active-border: rgba(79, 174, 159, 0.32);
+  --pill-add-border: rgba(79, 174, 159, 0.32);
+  --input-border: rgba(79, 174, 159, 0.18);
+  --currency-background: linear-gradient(135deg, rgba(79, 174, 159, 0.12), rgba(242, 215, 103, 0.1));
+  --icon-chip-border: rgba(79, 174, 159, 0.12);
+  --icon-chip-active-border: rgba(79, 174, 159, 0.38);
+  --icon-chip-active-background: rgba(79, 174, 159, 0.12);
+  --editor-background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(232, 248, 246, 0.92));
+  --custom-mood-background: linear-gradient(135deg, rgba(79, 174, 159, 0.12), rgba(255, 255, 255, 0.95));
+  --custom-mood-border: rgba(79, 174, 159, 0.18);
+  --tabs-background: rgba(245, 255, 254, 0.78);
+  --tabs-shadow: 0 18px 38px rgba(49, 72, 74, 0.12);
+  --nav-active-background: linear-gradient(180deg, rgba(79, 174, 159, 0.18), rgba(255, 255, 255, 0.92));
+  --plant-background:
+    radial-gradient(circle at top right, rgba(242, 215, 103, 0.24), transparent 28%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(229, 248, 245, 0.96));
+  --progress-track-background: rgba(79, 174, 159, 0.12);
+  --dot-background: rgba(79, 174, 159, 0.16);
+  --dot-active-background: linear-gradient(135deg, var(--primary), #7ed0c4);
+  --dot-active-shadow: 0 0 0 4px rgba(79, 174, 159, 0.12);
+  --summary-background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(236, 250, 245, 0.92));
+  --category-card-background: rgba(79, 174, 159, 0.06);
+  --item-divider: 1px dashed rgba(79, 174, 159, 0.14);
+  --admin-item-background: rgba(79, 174, 159, 0.06);
+  --admin-item-active-background: rgba(79, 174, 159, 0.14);
+  --admin-item-active-border: rgba(79, 174, 159, 0.22);
+  --care-summary-background: rgba(79, 174, 159, 0.06);
+  --mood-cloud-background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.7), transparent 22%),
+    radial-gradient(circle at 80% 18%, rgba(114, 184, 234, 0.18), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(236, 249, 247, 0.62));
+}
+
+:root[data-season="autumn"] {
+  --background: #f8f2e9;
+  --primary: #b9794b;
+  --peach: #e7a16a;
+  --blue: #8cb4bf;
+  --lavender: #b59abe;
+  --yellow: #d7b05b;
+  --rose: #cb8a7b;
+  --text: #4b3b31;
+  --muted: #9a7f71;
+  --line: rgba(185, 121, 75, 0.18);
+  --shadow: 0 20px 35px rgba(185, 121, 75, 0.12);
+  --shadow-soft: 0 12px 25px rgba(185, 121, 75, 0.08);
+  --page-background:
+    radial-gradient(circle at top left, rgba(215, 176, 91, 0.2), transparent 30%),
+    radial-gradient(circle at top right, rgba(232, 160, 103, 0.16), transparent 28%),
+    linear-gradient(180deg, #fffaf3 0%, var(--background) 45%, #f4eadf 100%);
+  --chip-background: rgba(185, 121, 75, 0.1);
+  --badge-background: linear-gradient(135deg, rgba(215, 176, 91, 0.2), rgba(232, 160, 103, 0.2));
+  --soft-badge-background: linear-gradient(135deg, rgba(185, 121, 75, 0.14), rgba(139, 179, 191, 0.14));
+  --banner-background: linear-gradient(135deg, rgba(185, 121, 75, 0.96), rgba(215, 176, 91, 0.92));
+  --update-banner-background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 28%),
+    linear-gradient(135deg, #9f6541, #d79b5d 52%, #ceb079 100%);
+  --auth-card-background:
+    radial-gradient(circle at top left, rgba(215, 176, 91, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(232, 160, 103, 0.16), transparent 32%),
+    rgba(255, 255, 255, 0.94);
+  --auth-card-shadow: 0 24px 50px rgba(185, 121, 75, 0.12);
+  --auth-orb-left: rgba(185, 121, 75, 0.16);
+  --auth-orb-right: rgba(232, 160, 103, 0.16);
+  --divider-background: linear-gradient(90deg, transparent, rgba(185, 121, 75, 0.45), transparent);
+  --reply-item-background: rgba(185, 121, 75, 0.08);
+  --reply-bar-background: linear-gradient(180deg, var(--primary), rgba(185, 121, 75, 0.35));
+  --primary-button-background: linear-gradient(135deg, var(--primary), #d39563);
+  --primary-button-shadow: 0 14px 24px rgba(185, 121, 75, 0.24);
+  --secondary-button-background: rgba(185, 121, 75, 0.12);
+  --ghost-button-border: rgba(185, 121, 75, 0.16);
+  --pill-border: rgba(185, 121, 75, 0.14);
+  --pill-active-background: linear-gradient(135deg, rgba(185, 121, 75, 0.18), rgba(215, 176, 91, 0.16));
+  --pill-active-border: rgba(185, 121, 75, 0.3);
+  --pill-add-border: rgba(185, 121, 75, 0.3);
+  --input-border: rgba(185, 121, 75, 0.18);
+  --currency-background: linear-gradient(135deg, rgba(185, 121, 75, 0.12), rgba(215, 176, 91, 0.12));
+  --icon-chip-border: rgba(185, 121, 75, 0.12);
+  --icon-chip-active-border: rgba(185, 121, 75, 0.38);
+  --icon-chip-active-background: rgba(185, 121, 75, 0.12);
+  --editor-background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 238, 228, 0.92));
+  --custom-mood-background: linear-gradient(135deg, rgba(185, 121, 75, 0.12), rgba(255, 255, 255, 0.95));
+  --custom-mood-border: rgba(185, 121, 75, 0.18);
+  --tabs-background: rgba(255, 251, 246, 0.78);
+  --tabs-shadow: 0 18px 38px rgba(75, 59, 49, 0.12);
+  --nav-active-background: linear-gradient(180deg, rgba(185, 121, 75, 0.16), rgba(255, 255, 255, 0.92));
+  --plant-background:
+    radial-gradient(circle at top right, rgba(215, 176, 91, 0.24), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 237, 225, 0.96));
+  --progress-track-background: rgba(185, 121, 75, 0.12);
+  --dot-background: rgba(185, 121, 75, 0.16);
+  --dot-active-background: linear-gradient(135deg, var(--primary), #d39a67);
+  --dot-active-shadow: 0 0 0 4px rgba(185, 121, 75, 0.12);
+  --summary-background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(250, 239, 226, 0.92));
+  --category-card-background: rgba(185, 121, 75, 0.06);
+  --item-divider: 1px dashed rgba(185, 121, 75, 0.14);
+  --admin-item-background: rgba(185, 121, 75, 0.06);
+  --admin-item-active-background: rgba(185, 121, 75, 0.14);
+  --admin-item-active-border: rgba(185, 121, 75, 0.22);
+  --care-summary-background: rgba(185, 121, 75, 0.06);
+  --mood-cloud-background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.7), transparent 22%),
+    radial-gradient(circle at 78% 20%, rgba(232, 160, 103, 0.18), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(250, 241, 232, 0.62));
+}
+
+:root[data-season="winter"] {
+  --background: #eff5fb;
+  --primary: #6b95b8;
+  --peach: #d9b1aa;
+  --blue: #8db8d8;
+  --lavender: #a7b2d9;
+  --yellow: #d8c678;
+  --rose: #c48ea2;
+  --text: #374452;
+  --muted: #8190a2;
+  --line: rgba(107, 149, 184, 0.18);
+  --shadow: 0 20px 35px rgba(107, 149, 184, 0.12);
+  --shadow-soft: 0 12px 25px rgba(107, 149, 184, 0.08);
+  --page-background:
+    radial-gradient(circle at top left, rgba(216, 198, 120, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(141, 184, 216, 0.18), transparent 28%),
+    linear-gradient(180deg, #fbfdff 0%, var(--background) 45%, #e8eff7 100%);
+  --chip-background: rgba(107, 149, 184, 0.1);
+  --badge-background: linear-gradient(135deg, rgba(107, 149, 184, 0.18), rgba(167, 178, 217, 0.2));
+  --soft-badge-background: linear-gradient(135deg, rgba(107, 149, 184, 0.14), rgba(141, 184, 216, 0.18));
+  --banner-background: linear-gradient(135deg, rgba(107, 149, 184, 0.96), rgba(141, 184, 216, 0.92));
+  --update-banner-background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, #587b9b, #8cb0cc 52%, #d5dff1 100%);
+  --auth-card-background:
+    radial-gradient(circle at top left, rgba(216, 198, 120, 0.12), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(141, 184, 216, 0.18), transparent 32%),
+    rgba(255, 255, 255, 0.95);
+  --auth-card-shadow: 0 24px 50px rgba(107, 149, 184, 0.12);
+  --auth-orb-left: rgba(107, 149, 184, 0.16);
+  --auth-orb-right: rgba(167, 178, 217, 0.16);
+  --divider-background: linear-gradient(90deg, transparent, rgba(107, 149, 184, 0.45), transparent);
+  --reply-item-background: rgba(107, 149, 184, 0.08);
+  --reply-bar-background: linear-gradient(180deg, var(--primary), rgba(107, 149, 184, 0.35));
+  --primary-button-background: linear-gradient(135deg, var(--primary), #88b2d1);
+  --primary-button-shadow: 0 14px 24px rgba(107, 149, 184, 0.24);
+  --secondary-button-background: rgba(107, 149, 184, 0.12);
+  --ghost-button-border: rgba(107, 149, 184, 0.16);
+  --pill-border: rgba(107, 149, 184, 0.14);
+  --pill-active-background: linear-gradient(135deg, rgba(107, 149, 184, 0.18), rgba(167, 178, 217, 0.16));
+  --pill-active-border: rgba(107, 149, 184, 0.3);
+  --pill-add-border: rgba(107, 149, 184, 0.3);
+  --input-border: rgba(107, 149, 184, 0.18);
+  --currency-background: linear-gradient(135deg, rgba(107, 149, 184, 0.1), rgba(216, 198, 120, 0.1));
+  --icon-chip-border: rgba(107, 149, 184, 0.12);
+  --icon-chip-active-border: rgba(107, 149, 184, 0.38);
+  --icon-chip-active-background: rgba(107, 149, 184, 0.12);
+  --editor-background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(234, 241, 248, 0.92));
+  --custom-mood-background: linear-gradient(135deg, rgba(107, 149, 184, 0.12), rgba(255, 255, 255, 0.95));
+  --custom-mood-border: rgba(107, 149, 184, 0.18);
+  --tabs-background: rgba(249, 252, 255, 0.78);
+  --tabs-shadow: 0 18px 38px rgba(55, 68, 82, 0.12);
+  --nav-active-background: linear-gradient(180deg, rgba(107, 149, 184, 0.16), rgba(255, 255, 255, 0.92));
+  --plant-background:
+    radial-gradient(circle at top right, rgba(216, 198, 120, 0.2), transparent 28%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(233, 241, 249, 0.96));
+  --progress-track-background: rgba(107, 149, 184, 0.12);
+  --dot-background: rgba(107, 149, 184, 0.16);
+  --dot-active-background: linear-gradient(135deg, var(--primary), #8db9da);
+  --dot-active-shadow: 0 0 0 4px rgba(107, 149, 184, 0.12);
+  --summary-background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(236, 242, 249, 0.92));
+  --category-card-background: rgba(107, 149, 184, 0.06);
+  --item-divider: 1px dashed rgba(107, 149, 184, 0.14);
+  --admin-item-background: rgba(107, 149, 184, 0.06);
+  --admin-item-active-background: rgba(107, 149, 184, 0.14);
+  --admin-item-active-border: rgba(107, 149, 184, 0.22);
+  --care-summary-background: rgba(107, 149, 184, 0.06);
+  --mood-cloud-background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.72), transparent 22%),
+    radial-gradient(circle at 78% 20%, rgba(167, 178, 217, 0.18), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(236, 243, 250, 0.64));
 }
 
 * {
@@ -23,10 +307,7 @@ body,
 #root {
   min-height: 100%;
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(232, 200, 88, 0.18), transparent 32%),
-    radial-gradient(circle at top right, rgba(126, 184, 216, 0.18), transparent 30%),
-    linear-gradient(180deg, #fbfdf8 0%, var(--background) 45%, #eef7ef 100%);
+  background: var(--page-background);
   color: var(--text);
   font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", sans-serif;
 }
@@ -72,8 +353,8 @@ button {
 .chart-card,
 .input-card,
 .inline-panel {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
 }
@@ -127,7 +408,7 @@ button {
   min-height: 38px;
   padding: 0 14px;
   border-radius: 999px;
-  background: rgba(107, 175, 123, 0.1);
+  background: var(--chip-background);
   color: var(--primary);
   font-weight: 700;
 }
@@ -150,7 +431,7 @@ button {
 .leaf-badge {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.16), rgba(242, 168, 133, 0.2));
+  background: var(--badge-background);
   font-size: 24px;
 }
 
@@ -167,14 +448,12 @@ button {
 }
 
 .banner {
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.96), rgba(126, 184, 216, 0.92));
+  background: var(--banner-background);
   color: #fff;
 }
 
 .update-banner {
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 28%),
-    linear-gradient(135deg, #6d69d9, #79a6ff 48%, #8eddb1 100%);
+  background: var(--update-banner-background);
   color: #fff;
 }
 
@@ -232,10 +511,7 @@ button {
   position: relative;
   height: 340px;
   border-radius: 28px;
-  background:
-    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.65), transparent 22%),
-    radial-gradient(circle at 78% 20%, rgba(242, 168, 133, 0.18), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.55));
+  background: var(--mood-cloud-background);
 }
 
 .mood-bubble {
@@ -367,7 +643,7 @@ button {
   content: "";
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(107, 175, 123, 0.45), transparent);
+  background: var(--divider-background);
   position: absolute;
 }
 
@@ -415,14 +691,14 @@ button {
 .emoji-box {
   width: 54px;
   height: 54px;
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.12), rgba(126, 184, 216, 0.16));
+  background: var(--soft-badge-background);
   font-size: 25px;
 }
 
 .mini-emoji {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.12), rgba(126, 184, 216, 0.16));
+  background: var(--soft-badge-background);
   font-size: 20px;
 }
 
@@ -430,7 +706,7 @@ button {
   position: relative;
   padding: 11px 14px 11px 16px;
   border-radius: 16px;
-  background: rgba(107, 175, 123, 0.08);
+  background: var(--reply-item-background);
 }
 
 .reply-item::before {
@@ -441,7 +717,7 @@ button {
   bottom: 10px;
   width: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--primary), rgba(107, 175, 123, 0.35));
+  background: var(--reply-bar-background);
 }
 
 .primary-button,
@@ -456,20 +732,20 @@ button {
 }
 
 .primary-button {
-  background: linear-gradient(135deg, var(--primary), #82c292);
+  background: var(--primary-button-background);
   color: #fff;
-  box-shadow: 0 14px 24px rgba(107, 175, 123, 0.26);
+  box-shadow: var(--primary-button-shadow);
 }
 
 .secondary-button {
-  background: rgba(107, 175, 123, 0.12);
+  background: var(--secondary-button-background);
   color: var(--primary);
 }
 
 .ghost-button {
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--ghost-button-background);
   color: var(--text);
-  border: 1px solid rgba(107, 175, 123, 0.14);
+  border: 1px solid var(--ghost-button-border);
 }
 
 .pill-row,
@@ -483,20 +759,20 @@ button {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.88);
   color: var(--text);
-  border: 1px solid rgba(107, 175, 123, 0.12);
+  border: 1px solid var(--pill-border);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .pill-button.active {
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.18), rgba(126, 184, 216, 0.16));
+  background: var(--pill-active-background);
   color: var(--primary);
-  border-color: rgba(107, 175, 123, 0.32);
+  border-color: var(--pill-active-border);
 }
 
 .pill-button.add {
-  border: 2px dashed rgba(107, 175, 123, 0.32);
+  border: 2px dashed var(--pill-add-border);
   background: rgba(255, 255, 255, 0.55);
 }
 
@@ -526,11 +802,8 @@ button {
 .auth-card {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(232, 200, 88, 0.2), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(126, 184, 216, 0.18), transparent 32%),
-    rgba(255, 255, 255, 0.94);
-  box-shadow: 0 24px 50px rgba(107, 175, 123, 0.14);
+  background: var(--auth-card-background);
+  box-shadow: var(--auth-card-shadow);
   border-radius: 30px;
 }
 
@@ -547,13 +820,13 @@ button {
 .auth-orb-left {
   top: -34px;
   left: -18px;
-  background: rgba(107, 175, 123, 0.18);
+  background: var(--auth-orb-left);
 }
 
 .auth-orb-right {
   right: -18px;
   bottom: -34px;
-  background: rgba(242, 168, 133, 0.18);
+  background: var(--auth-orb-right);
 }
 
 .auth-copy {
@@ -592,7 +865,7 @@ button {
 .text-area {
   width: 100%;
   border-radius: 16px;
-  border: 1px solid rgba(107, 175, 123, 0.18);
+  border: 1px solid var(--input-border);
   padding: 14px 16px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
@@ -607,7 +880,7 @@ button {
   align-items: center;
   padding: 14px 16px;
   border-radius: 22px;
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.1), rgba(232, 200, 88, 0.1));
+  background: var(--currency-background);
   margin-bottom: 14px;
 }
 
@@ -637,18 +910,17 @@ button {
   height: 44px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(107, 175, 123, 0.12);
+  border: 1px solid var(--icon-chip-border);
   font-size: 22px;
 }
 
 .icon-chip.active {
-  border-color: rgba(107, 175, 123, 0.38);
-  background: rgba(107, 175, 123, 0.12);
+  border-color: var(--icon-chip-active-border);
+  background: var(--icon-chip-active-background);
 }
 
 .custom-mood-editor {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(235, 246, 238, 0.9));
+  background: var(--editor-background);
 }
 
 .custom-mood-list {
@@ -667,8 +939,8 @@ button {
   min-height: 52px;
   padding: 0 16px;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(107, 175, 123, 0.12), rgba(255, 255, 255, 0.95));
-  border: 1px solid rgba(107, 175, 123, 0.16);
+  background: var(--custom-mood-background);
+  border: 1px solid var(--custom-mood-border);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -703,10 +975,10 @@ button {
   margin: 0 auto;
   padding: 10px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--tabs-background);
   backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 38px rgba(59, 74, 62, 0.14);
+  border: 1px solid var(--tabs-border);
+  box-shadow: var(--tabs-shadow);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -732,7 +1004,7 @@ button {
 
 .nav-button.active {
   color: var(--primary);
-  background: linear-gradient(180deg, rgba(107, 175, 123, 0.16), rgba(255, 255, 255, 0.9));
+  background: var(--nav-active-background);
 }
 
 .nav-button .icon {
@@ -777,9 +1049,7 @@ button {
 }
 
 .plant-card {
-  background:
-    radial-gradient(circle at top right, rgba(232, 200, 88, 0.26), transparent 30%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(230, 245, 232, 0.96));
+  background: var(--plant-background);
 }
 
 .plant-top {
@@ -792,7 +1062,7 @@ button {
 .plant-avatar {
   width: 92px;
   height: 92px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--plant-avatar-background);
   font-size: 48px;
   animation: floaty 2.8s ease-in-out infinite;
 }
@@ -819,14 +1089,14 @@ button {
 .progress-track {
   height: 12px;
   border-radius: 999px;
-  background: rgba(107, 175, 123, 0.12);
+  background: var(--progress-track-background);
   overflow: hidden;
   margin: 12px 0 8px;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--yellow));
+  background: var(--progress-fill-background);
 }
 
 .day-dots {
@@ -839,12 +1109,12 @@ button {
 .day-dot {
   width: 12px;
   height: 12px;
-  background: rgba(107, 175, 123, 0.16);
+  background: var(--dot-background);
 }
 
 .day-dot.active {
-  background: linear-gradient(135deg, var(--primary), #84c89b);
-  box-shadow: 0 0 0 4px rgba(107, 175, 123, 0.12);
+  background: var(--dot-active-background);
+  box-shadow: var(--dot-active-shadow);
 }
 
 .tip-card {
@@ -870,7 +1140,7 @@ button {
 }
 
 .summary-card {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(251, 241, 225, 0.92));
+  background: var(--summary-background);
 }
 
 .summary-amount {
@@ -897,7 +1167,7 @@ button {
 
 .category-card {
   border-radius: 18px;
-  background: rgba(107, 175, 123, 0.06);
+  background: var(--category-card-background);
   padding: 14px;
   margin-top: 10px;
 }
@@ -908,7 +1178,7 @@ button {
   gap: 12px;
   align-items: center;
   padding: 12px 0;
-  border-top: 1px dashed rgba(107, 175, 123, 0.14);
+  border-top: var(--item-divider);
 }
 
 .amount {
@@ -919,7 +1189,7 @@ button {
 .empty-card {
   padding: 20px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--empty-card-background);
   color: var(--muted);
   text-align: center;
   line-height: 1.8;
@@ -989,13 +1259,13 @@ button {
 .admin-list-item {
   padding: 12px;
   border-radius: 18px;
-  background: rgba(107, 175, 123, 0.06);
+  background: var(--admin-item-background);
   border: 1px solid transparent;
 }
 
 .admin-list-item.active {
-  background: rgba(107, 175, 123, 0.14);
-  border-color: rgba(107, 175, 123, 0.22);
+  background: var(--admin-item-active-background);
+  border-color: var(--admin-item-active-border);
 }
 
 .status-pill {

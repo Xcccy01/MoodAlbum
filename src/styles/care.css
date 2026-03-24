@@ -23,7 +23,7 @@
 .care-summary-item {
   padding: 14px 16px;
   border-radius: 18px;
-  background: rgba(107, 175, 123, 0.06);
+  background: var(--care-summary-background);
 }
 
 .care-invite-row {

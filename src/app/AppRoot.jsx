@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.js";
 import { APP_NAME } from "../lib/constants.js";
+import { getCurrentSeasonKey } from "../lib/ui.js";
 
 const AuthPage = lazy(() =>
   import("../features/auth/AuthPage.jsx").then((module) => ({ default: module.AuthPage }))
@@ -79,6 +80,7 @@ function buildCapabilities(membership) {
 }
 
 export default function AppRoot() {
+  const seasonKey = getCurrentSeasonKey();
   const [pathname, setPathname] = useState(() => normalizePath(window.location.pathname));
   const [session, setSession] = useState({
     checking: true,
@@ -101,6 +103,11 @@ export default function AppRoot() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.season = seasonKey;
+    document.body.dataset.season = seasonKey;
+  }, [seasonKey]);
 
   useEffect(() => {
     refreshSession();

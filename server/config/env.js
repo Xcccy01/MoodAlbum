@@ -24,6 +24,24 @@ export function createConfig({ preferMigrationUrl = false } = {}) {
     secureCookies: resolveSecureCookiesMode(process.env.SECURE_COOKIES, nodeEnv),
     platformAdminSecret: process.env.PLATFORM_ADMIN_SECRET || "",
     runMigrationsOnBoot: process.env.RUN_MIGRATIONS !== "false",
+    apiRateLimitWindowMs: readPositiveInteger(process.env.API_RATE_LIMIT_WINDOW_MS, 60_000),
+    apiRateLimitMax: readPositiveInteger(
+      process.env.API_RATE_LIMIT_AUTH_MAX,
+      nodeEnv === "production" ? 600 : 1_200
+    ),
+    anonymousApiRateLimitMax: readPositiveInteger(
+      process.env.API_RATE_LIMIT_ANON_MAX,
+      nodeEnv === "production" ? 240 : 600
+    ),
+    authRateLimitWindowMs: readPositiveInteger(process.env.AUTH_RATE_LIMIT_WINDOW_MS, 60_000),
+    loginRateLimitMax: readPositiveInteger(
+      process.env.LOGIN_RATE_LIMIT_MAX,
+      nodeEnv === "production" ? 30 : 300
+    ),
+    registerRateLimitMax: readPositiveInteger(
+      process.env.REGISTER_RATE_LIMIT_MAX,
+      nodeEnv === "production" ? 20 : 200
+    ),
   };
 
   validateConfig(config);
@@ -39,6 +57,14 @@ function resolveSecureCookiesMode(rawValue, nodeEnv) {
     return false;
   }
   return nodeEnv === "production" ? "auto" : false;
+}
+
+function readPositiveInteger(rawValue, fallback) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+  return Math.floor(parsed);
 }
 
 export function loadEnvFile(filePath) {
