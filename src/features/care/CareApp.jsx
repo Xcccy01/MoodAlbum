@@ -33,6 +33,8 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   const [invites, setInvites] = useState([]);
   const [inviteRole, setInviteRole] = useState("member");
   const baseDataRequestIdRef = useRef(0);
+  const moodsRequestIdRef = useRef(0);
+  const moodDetailRequestIdRef = useRef(0);
 
   useEffect(() => {
     void loadBaseData();
@@ -44,6 +46,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
 
   useEffect(() => {
     if (!selectedMoodId) {
+      moodDetailRequestIdRef.current += 1;
       setSelectedMood(null);
       return;
     }
@@ -107,27 +110,56 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   }
 
   async function loadMoods() {
-    const result = await runRequest("正在同步待回复列表...", async () => {
+    const requestId = moodsRequestIdRef.current + 1;
+    moodsRequestIdRef.current = requestId;
+    setBusy("正在同步待回复列表...");
+    setError("");
+    setNotice("");
+
+    try {
       const query = new URLSearchParams();
       query.set("status", filterStatus);
       if (selectedMemberId) {
         query.set("memberId", selectedMemberId);
       }
-      return api(`/api/care/moods?${query.toString()}`);
-    });
-
-    if (result) {
+      const result = await api(`/api/care/moods?${query.toString()}`);
+      if (requestId !== moodsRequestIdRef.current) {
+        return;
+      }
       setMoods(result.items || []);
+    } catch (requestError) {
+      if (requestId !== moodsRequestIdRef.current) {
+        return;
+      }
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      if (requestId === moodsRequestIdRef.current) {
+        setBusy("");
+      }
     }
   }
 
   async function loadMoodDetail(moodId) {
-    const result = await runRequest(
-      "正在加载心情详情...",
-      async () => api(`/api/care/moods/${moodId}`)
-    );
-    if (result) {
+    const requestId = moodDetailRequestIdRef.current + 1;
+    moodDetailRequestIdRef.current = requestId;
+    setBusy("正在加载心情详情...");
+    setError("");
+
+    try {
+      const result = await api(`/api/care/moods/${moodId}`);
+      if (requestId !== moodDetailRequestIdRef.current) {
+        return;
+      }
       setSelectedMood(result.mood || null);
+    } catch (requestError) {
+      if (requestId !== moodDetailRequestIdRef.current) {
+        return;
+      }
+      handleRequestError(requestError, onRequestError, setError);
+    } finally {
+      if (requestId === moodDetailRequestIdRef.current) {
+        setBusy("");
+      }
     }
   }
 
@@ -349,7 +381,9 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
                 />
               </div>
               <div>
-                <div className="meta-title">{selectedMood.label}</div>
+                <div className="meta-title" data-testid="care-selected-mood-label">
+                  {selectedMood.label}
+                </div>
                 <div className="meta-subtitle">
                   {selectedMood.user?.displayName ||
                     selectedMood.user?.username ||

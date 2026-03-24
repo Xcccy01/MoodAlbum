@@ -228,6 +228,37 @@ test("回复落在历史心情上时也能全部标记已读", async (t) => {
   assert.equal(readAll.data.unreadCount, 0);
 });
 
+test("同一账号并发创建家庭时只会成功一次", async (t) => {
+  const server = await startTestServer();
+  t.after(async () => {
+    await server.close();
+  });
+
+  const stamp = Date.now().toString(36);
+  const owner = await register(server.baseUrl, `hc_${stamp}`);
+  const [firstCreate, secondCreate] = await Promise.all([
+    request(server.baseUrl, "/api/households", {
+      method: "POST",
+      cookie: owner.cookie,
+      body: { name: `家庭_${stamp}` },
+    }),
+    request(server.baseUrl, "/api/households", {
+      method: "POST",
+      cookie: owner.cookie,
+      body: { name: `家庭_${stamp}` },
+    }),
+  ]);
+
+  const statuses = [firstCreate.response.status, secondCreate.response.status].sort(
+    (left, right) => left - right
+  );
+  assert.deepEqual(statuses, [201, 409]);
+  assert.equal(
+    [firstCreate.data.error, secondCreate.data.error].filter(Boolean).at(0),
+    "当前账号已经加入家庭了。"
+  );
+});
+
 test("同一个邀请码并发加入时只能成功一次", async (t) => {
   const server = await startTestServer();
   t.after(async () => {

@@ -16,6 +16,24 @@ function createHttpError(statusCode, message) {
   return error;
 }
 
+function isMembershipConflict(error) {
+  const code = String(error?.code || "");
+  const constraint = String(error?.constraint || "");
+  const message = String(error?.message || "");
+  const detail = String(error?.detail || error?.data?.details || "");
+
+  if (code !== "23505") {
+    return false;
+  }
+
+  return (
+    constraint === "household_members_user_id_key" ||
+    constraint === "household_members_pkey" ||
+    message.includes("household_members") ||
+    detail.includes("(user_id)=")
+  );
+}
+
 export function createHouseholdsRouter({ database }) {
   const router = express.Router();
 
@@ -37,25 +55,33 @@ export function createHouseholdsRouter({ database }) {
       const householdId = randomId();
       const createdAt = nowIso();
 
-      await database.transaction(async (client) => {
-        await client.query(
-          `
-            INSERT INTO households (id, name, owner_user_id, created_at)
-            VALUES ($1, $2, $3, $4)
-          `,
-          [householdId, name, req.context.user.id, createdAt]
-        );
+      try {
+        await database.transaction(async (client) => {
+          await client.query(
+            `
+              INSERT INTO households (id, name, owner_user_id, created_at)
+              VALUES ($1, $2, $3, $4)
+            `,
+            [householdId, name, req.context.user.id, createdAt]
+          );
 
-        await client.query(
-          `
-            INSERT INTO household_members (
-              id, household_id, user_id, role, display_name, status, created_at, joined_at
-            )
-            VALUES ($1, $2, $3, 'owner', $4, 'active', $5, $5)
-          `,
-          [randomId(), householdId, req.context.user.id, req.context.user.username, createdAt]
-        );
-      });
+          await client.query(
+            `
+              INSERT INTO household_members (
+                id, household_id, user_id, role, display_name, status, created_at, joined_at
+              )
+              VALUES ($1, $2, $3, 'owner', $4, 'active', $5, $5)
+            `,
+            [randomId(), householdId, req.context.user.id, req.context.user.username, createdAt]
+          );
+        });
+      } catch (error) {
+        if (isMembershipConflict(error)) {
+          res.status(409).json({ error: "当前账号已经加入家庭了。" });
+          return;
+        }
+        throw error;
+      }
 
       res.status(201).json({
         household: { id: householdId, name },

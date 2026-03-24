@@ -112,3 +112,50 @@ test("不同家庭之间的回复端数据隔离", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /手动回复心情诉求/ })).toBeVisible();
   await expect(page.getByTestId("care-mood-item").first()).toContainText(`member_a_${stamp}`);
 });
+
+test("回复端快速切换心情时不会被旧详情覆盖", async ({ page }) => {
+  const stamp = Date.now().toString(36);
+
+  await register(page, "/care", `o2_${stamp}`, "secret123");
+  await createHousehold(page, `家庭_${stamp}`);
+
+  const memberCode = await createInvite(page, "member");
+  const caregiverCode = await createInvite(page, "caregiver");
+
+  await logout(page);
+
+  await register(page, "/", `m2_${stamp}`, "secret123");
+  await page.getByTestId("join-household-code").fill(memberCode || "");
+  await page.getByTestId("join-household-submit").click();
+  await expect(page.getByRole("heading", { name: /早上好呀/ })).toBeVisible();
+
+  await page.getByTestId("mood-bad").click();
+  await expect(page.getByText("心情已记录。")).toBeVisible();
+  await page.getByTestId("mood-happy").click();
+  await expect(page.getByText("心情已记录。")).toBeVisible();
+  await page.getByTestId("mood-tired").click();
+  await expect(page.getByText("心情已记录。")).toBeVisible();
+  await logout(page);
+
+  await register(page, "/care", `c2_${stamp}`, "secret123");
+  await page.getByTestId("join-household-code").fill(caregiverCode || "");
+  await page.getByTestId("join-household-submit").click();
+  await expect(page.getByRole("heading", { name: /手动回复心情诉求/ })).toBeVisible();
+  await expect(page.getByTestId("care-mood-item")).toHaveCount(3);
+  await expect(page.getByTestId("care-selected-mood-label")).toHaveText("有点累");
+
+  let delayedDetailRequestHandled = false;
+  await page.route(/\/api\/care\/moods\/[^/?]+$/, async (route) => {
+    if (!delayedDetailRequestHandled) {
+      delayedDetailRequestHandled = true;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+    await route.continue();
+  });
+
+  const moodItems = page.getByTestId("care-mood-item");
+  await moodItems.nth(1).click();
+  await moodItems.nth(2).click();
+
+  await expect(page.getByTestId("care-selected-mood-label")).toHaveText("不太好");
+});
