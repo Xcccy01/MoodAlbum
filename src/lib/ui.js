@@ -8,6 +8,7 @@ const PLANT_THRESHOLDS = [
   { threshold: 30, stage: "开花" },
   { threshold: 60, stage: "繁盛" },
 ];
+const WEEKDAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
 export { COLORS };
 
@@ -97,6 +98,33 @@ export function toChinaDateKey(date = new Date()) {
   return toDateKey(date);
 }
 
+export function getCurrentWeekCheckinDots(recentDates = [], date = new Date()) {
+  const checkedDateKeys = new Set(
+    (Array.isArray(recentDates) ? recentDates : [])
+      .filter((item) => typeof item === "string" && item)
+      .map((item) => item.slice(0, 10))
+  );
+
+  const currentChinaDate = createChinaNoonDate(date);
+  const currentWeekday = currentChinaDate.getUTCDay();
+  const mondayOffset = currentWeekday === 0 ? 6 : currentWeekday - 1;
+  const weekStart = new Date(currentChinaDate);
+  weekStart.setUTCDate(currentChinaDate.getUTCDate() - mondayOffset);
+
+  return WEEKDAY_LABELS.map((label, index) => {
+    const weekDate = new Date(weekStart);
+    weekDate.setUTCDate(weekStart.getUTCDate() + index);
+    const key = toDateKey(weekDate);
+
+    return {
+      key,
+      label,
+      active: checkedDateKeys.has(key),
+      isToday: key === toDateKey(currentChinaDate),
+    };
+  });
+}
+
 export function getMemberReplyState(mood) {
   if (!mood) {
     return "pending";
@@ -159,4 +187,9 @@ function getUnreadReplyCount(mood) {
 
   const unreadReplyCount = Number(mood.unreadReplyCount || 0);
   return Number.isFinite(unreadReplyCount) ? unreadReplyCount : 0;
+}
+
+function createChinaNoonDate(date = new Date()) {
+  const parts = getTimeZoneParts(date);
+  return new Date(`${parts.year}-${parts.month}-${parts.day}T12:00:00+08:00`);
 }

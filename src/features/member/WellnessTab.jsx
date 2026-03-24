@@ -1,4 +1,4 @@
-import { getCurrentSeason } from "../../lib/ui.js";
+import { getCurrentSeason, getCurrentWeekCheckinDots } from "../../lib/ui.js";
 import { getPlantArtName, IllustrationIcon, pickFromList } from "../shared/IllustrationIcon.jsx";
 
 export function WellnessTab({
@@ -12,8 +12,7 @@ export function WellnessTab({
   notice,
 }) {
   const season = getCurrentSeason();
-  const activeDotCount = Math.max(0, Math.min(Number(checkinProgress.streakCount || 0), 7));
-  const progressDots = Array.from({ length: 7 }, (_, index) => index + 1);
+  const weeklyDots = getCurrentWeekCheckinDots(checkinProgress.recentDates);
 
   return (
     <>
@@ -61,13 +60,19 @@ export function WellnessTab({
             : "已经进入最繁盛阶段，继续保持这份稳定的节奏。"}
         </div>
 
+        <div className="section-note" style={{ marginTop: 10 }}>本周打卡</div>
         <div className="day-dots">
-          {progressDots.map((step) => (
-            <span
-              key={step}
-              className={`day-dot ${step <= activeDotCount ? "active" : ""}`}
-              title={`连续打卡第 ${step} 天`}
-            />
+          {weeklyDots.map((day) => (
+            <div className="day-dot-item" key={day.key}>
+              <span
+                className={`day-dot ${day.active ? "active" : ""} ${day.isToday ? "today" : ""}`}
+                title={`周${day.label}${day.active ? "已打卡" : "未打卡"}`}
+                data-testid="checkin-week-dot"
+                data-active={day.active ? "true" : "false"}
+                data-today={day.isToday ? "true" : "false"}
+              />
+              <span className={`day-dot-label ${day.isToday ? "today" : ""}`}>{day.label}</span>
+            </div>
           ))}
         </div>
 
