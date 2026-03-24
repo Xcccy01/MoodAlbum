@@ -183,6 +183,14 @@ export default function AppRoot() {
     }
   }
 
+  function openMemberApp() {
+    navigateTo("/");
+  }
+
+  function openCareApp() {
+    navigateTo("/care");
+  }
+
   if (session.checking) {
     return <LoadingScreen text="正在准备家庭空间" />;
   }
@@ -223,6 +231,7 @@ export default function AppRoot() {
         <CareApp
           session={session}
           onLogout={logout}
+          onOpenMemberApp={openMemberApp}
           onRequestError={handleRequestError}
         />
       </Suspense>
@@ -234,6 +243,7 @@ export default function AppRoot() {
       <MemberApp
         session={session}
         onLogout={logout}
+        onOpenCareApp={openCareApp}
         onRequestError={handleRequestError}
       />
     </Suspense>

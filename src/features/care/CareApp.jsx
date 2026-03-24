@@ -19,7 +19,7 @@ function getRoleLabel(role) {
   return "普通成员";
 }
 
-export function CareApp({ session, onLogout, onRequestError }) {
+export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -202,9 +202,19 @@ export function CareApp({ session, onLogout, onRequestError }) {
       <div className="header-card admin-header-card">
         <div className="date-row">
           <span className="section-note">家人回复端 · {session.user.username}</span>
-          <button type="button" className="ghost-button" onClick={onLogout}>
-            退出登录
-          </button>
+          <div className="button-row" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={onOpenMemberApp}
+              data-testid="open-member-app"
+            >
+              去记录端
+            </button>
+            <button type="button" className="ghost-button" onClick={onLogout}>
+              退出登录
+            </button>
+          </div>
         </div>
         <div className="greeting-row">
           <div>

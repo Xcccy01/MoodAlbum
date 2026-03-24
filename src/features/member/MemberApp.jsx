@@ -27,7 +27,7 @@ function getGreeting() {
   return "早上好呀";
 }
 
-function Header({ session, onLogout, unreadCount }) {
+function Header({ session, onLogout, unreadCount, canAccessCare, onOpenCareApp }) {
   const headerDate = new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "long",
@@ -44,6 +44,16 @@ function Header({ session, onLogout, unreadCount }) {
             <IllustrationIcon name="clover" className="inline-art-icon" />
             <span>{session.user.username}</span>
           </div>
+          {canAccessCare ? (
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={onOpenCareApp}
+              data-testid="open-care-app"
+            >
+              去回复端
+            </button>
+          ) : null}
           <button type="button" className="ghost-button" onClick={onLogout}>
             退出登录
           </button>
@@ -87,7 +97,7 @@ function handleRequestError(requestError, onRequestError, setError) {
   setError(requestError.message);
 }
 
-export function MemberApp({ session, onLogout, onRequestError }) {
+export function MemberApp({ session, onLogout, onOpenCareApp, onRequestError }) {
   const [activeTab, setActiveTab] = useState("mood");
   const [moodItems, setMoodItems] = useState([]);
   const [customMoods, setCustomMoods] = useState([]);
@@ -509,7 +519,13 @@ export function MemberApp({ session, onLogout, onRequestError }) {
   return (
     <div className="shell">
       <div className="screen">
-        <Header session={session} onLogout={onLogout} unreadCount={unreadCount} />
+        <Header
+          session={session}
+          onLogout={onLogout}
+          unreadCount={unreadCount}
+          canAccessCare={session.capabilities.canAccessCare}
+          onOpenCareApp={onOpenCareApp}
+        />
 
         {error ? <div className="error-text" style={{ marginBottom: 12 }}>{error}</div> : null}
         {feedback ? (

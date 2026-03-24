@@ -17,6 +17,10 @@ test("公开版成员主链路可用", async ({ page }) => {
   const stamp = Date.now().toString(36);
   await register(page, "/care", `owner_${stamp}`, "secret123");
   await createHousehold(page, `家庭_${stamp}`);
+  await page.getByTestId("open-member-app").click();
+  await expect(page.getByRole("heading", { name: /早上好呀/ })).toBeVisible();
+  await page.getByTestId("open-care-app").click();
+  await expect(page.getByRole("heading", { name: /手动回复心情诉求/ })).toBeVisible();
   await page.goto("/care");
   await page.getByTestId("care-invite-role").selectOption("member");
   await page.getByTestId("care-create-invite").click({ force: true });

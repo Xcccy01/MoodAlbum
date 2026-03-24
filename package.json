@@ -16,8 +16,7 @@
     "test:ui": "playwright test",
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
-    "android:apk": "npx cap sync android && cd android && gradlew.bat assembleDebug",
-    "android:apk:variants": "node scripts/build-android-apks.mjs"
+    "android:apk": "node scripts/build-android-apk.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.2.0",
