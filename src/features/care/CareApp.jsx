@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../../lib/api.js";
 import { formatDateTime, getReplyBadge } from "../../lib/format.js";
 import { getAdminReplyState } from "../../lib/ui.js";
@@ -32,6 +32,7 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   const [replyText, setReplyText] = useState("");
   const [invites, setInvites] = useState([]);
   const [inviteRole, setInviteRole] = useState("member");
+  const baseDataRequestIdRef = useRef(0);
 
   useEffect(() => {
     void loadBaseData();
@@ -83,16 +84,26 @@ export function CareApp({ session, onLogout, onOpenMemberApp, onRequestError }) 
   }
 
   async function loadBaseData() {
-    await runRequest("正在加载家庭信息...", async () => {
+    const requestId = baseDataRequestIdRef.current + 1;
+    baseDataRequestIdRef.current = requestId;
+
+    const result = await runRequest("正在加载家庭信息...", async () => {
       const [membersData, invitesData] = await Promise.all([
         api("/api/care/members"),
         session.capabilities.canManageInvites
           ? api("/api/care/invites")
           : Promise.resolve({ invites: [] }),
       ]);
-      setMembers(membersData.members || []);
-      setInvites(invitesData.invites || []);
+      return {
+        members: membersData.members || [],
+        invites: invitesData.invites || [],
+      };
     });
+
+    if (result && requestId === baseDataRequestIdRef.current) {
+      setMembers(result.members);
+      setInvites(result.invites);
+    }
   }
 
   async function loadMoods() {

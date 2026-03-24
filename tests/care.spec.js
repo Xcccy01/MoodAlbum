@@ -68,7 +68,12 @@ test("家人回复端可以邀请、加入并回复成员心情", async ({ page 
   await page.getByTestId("auth-username").fill(`m_${stamp}`);
   await page.getByTestId("auth-password").fill("secret123");
   await page.getByTestId("auth-submit").click();
-  await expect(page.getByText("已经看到这条心情了，先慢一点，照顾好自己。")).toBeVisible();
+  await expect(
+    page
+      .getByTestId("mood-history-item")
+      .filter({ hasText: "已经看到这条心情了，先慢一点，照顾好自己。" })
+      .first()
+  ).toBeVisible();
 });
 
 test("不同家庭之间的回复端数据隔离", async ({ page }) => {
