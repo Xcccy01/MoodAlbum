@@ -1,4 +1,4 @@
-import { getCurrentSeason, toChinaDateKey } from "../../lib/ui.js";
+import { getCurrentSeason } from "../../lib/ui.js";
 import { getPlantArtName, IllustrationIcon, pickFromList } from "../shared/IllustrationIcon.jsx";
 
 export function WellnessTab({
@@ -12,14 +12,8 @@ export function WellnessTab({
   notice,
 }) {
   const season = getCurrentSeason();
-  const recentDateSet = new Set(checkinProgress.recentDates || []);
-  const recentDays = [];
-
-  for (let offset = 6; offset >= 0; offset -= 1) {
-    const date = new Date();
-    date.setDate(date.getDate() - offset);
-    recentDays.push(toChinaDateKey(date));
-  }
+  const activeDotCount = Math.max(0, Math.min(Number(checkinProgress.streakCount || 0), 7));
+  const progressDots = Array.from({ length: 7 }, (_, index) => index + 1);
 
   return (
     <>
@@ -68,11 +62,11 @@ export function WellnessTab({
         </div>
 
         <div className="day-dots">
-          {recentDays.map((day) => (
+          {progressDots.map((step) => (
             <span
-              key={day}
-              className={`day-dot ${recentDateSet.has(day) ? "active" : ""}`}
-              title={day}
+              key={step}
+              className={`day-dot ${step <= activeDotCount ? "active" : ""}`}
+              title={`连续打卡第 ${step} 天`}
             />
           ))}
         </div>
